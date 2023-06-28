@@ -5,7 +5,7 @@
 #include "./tiles/overworld.h"
 #include "./tiles/sprites.h"
 
-#define skip_intro 0
+#define skip_intro 1
 
 #define MIN(A,B) ((A)<(B)?(A):(B))
 #define bigmap_mapHeight 32
@@ -147,6 +147,7 @@ void loadGame() {
   counter = 0;
 
   set_sprite_data(0x00, sprites_TILE_COUNT, sprites_tiles);
+  // Player metasprite
   set_sprite_tile(0, 0);
   set_sprite_tile(1, 1);
   set_sprite_tile(2, 2);
@@ -162,6 +163,42 @@ void loadGame() {
   move_sprite(3, player_x + 8, player_y);
   move_sprite(4, player_x + 8, player_y + 8);
   move_sprite(5, player_x + 8, player_y + 16);
+  // Arm metasprite
+  set_sprite_tile(6, 3);
+  set_sprite_tile(7, 4);
+  set_sprite_tile(8, 5);
+  set_sprite_tile(9, 6);
+  set_sprite_tile(10, 7);
+  set_sprite_tile(11, 8);
+  uint8_t arm_x = player_x - 8;
+  uint8_t arm_y = player_y + 8;
+  move_sprite(6, arm_x, arm_y);
+  move_sprite(7, arm_x + 8, arm_y);
+  move_sprite(8, arm_x, arm_y + 8);
+  move_sprite(9, arm_x + 8, arm_y + 8);
+  move_sprite(10, arm_x, arm_y + 16);
+  move_sprite(11, arm_x + 8, arm_y + 16);
+  // Arm metasprite 2
+  set_sprite_tile(12, 3);
+  set_sprite_tile(13, 4);
+  set_sprite_tile(14, 5);
+  set_sprite_tile(15, 6);
+  set_sprite_tile(16, 7);
+  set_sprite_tile(17, 8);
+  arm_x = player_x + 8;
+  arm_y = player_y + 8;
+  move_sprite(12, arm_x + 8, arm_y);
+  move_sprite(13, arm_x, arm_y);
+  move_sprite(14, arm_x + 8, arm_y + 8);
+  move_sprite(15, arm_x, arm_y + 8);
+  move_sprite(16, arm_x + 8, arm_y + 16);
+  move_sprite(17, arm_x, arm_y + 16);
+  set_sprite_prop(12, S_FLIPX);
+  set_sprite_prop(13, S_FLIPX);
+  set_sprite_prop(14, S_FLIPX);
+  set_sprite_prop(15, S_FLIPX);
+  set_sprite_prop(16, S_FLIPX);
+  set_sprite_prop(17, S_FLIPX);
 
   DISPLAY_ON;
 }

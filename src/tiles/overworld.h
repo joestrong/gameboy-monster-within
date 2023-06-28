@@ -11,7 +11,7 @@
 #define overworld_TILE_H 8
 #define overworld_WIDTH 256
 #define overworld_HEIGHT 256
-#define overworld_TILE_COUNT 12
+#define overworld_TILE_COUNT 13
 #define overworld_PALETTE_COUNT 1
 #define overworld_COLORS_PER_PALETTE 4
 #define overworld_TOTAL_COLORS 4
@@ -20,7 +20,7 @@
 BANKREF_EXTERN(overworld)
 
 extern const palette_color_t overworld_palettes[4];
-extern const uint8_t overworld_tiles[192];
+extern const uint8_t overworld_tiles[208];
 
 extern const unsigned char overworld_map[1024];
 
