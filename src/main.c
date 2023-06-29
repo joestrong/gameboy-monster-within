@@ -37,6 +37,7 @@ uint8_t player_y = 80;
 void main() {
   DISPLAY_OFF;
   LCDC_REG = LCDCF_OFF | LCDCF_BG8800 | LCDCF_BG9800 | LCDCF_BGON | LCDCF_OBJON;
+  SPRITES_8x16;
 
   // Set pallette defaults
   const UWORD palettes[] = {
@@ -155,56 +156,41 @@ void loadGame() {
   set_sprite_data(0x00, sprites_TILE_COUNT, sprites_tiles);
   // Player metasprite
   set_sprite_tile(0, 0);
-  set_sprite_tile(1, 1);
-  set_sprite_tile(2, 2);
-  set_sprite_tile(3, 0);
-  set_sprite_tile(4, 1);
-  set_sprite_tile(5, 2);
+  set_sprite_tile(1, 2);
+  set_sprite_tile(2, 0);
+  set_sprite_tile(3, 2);
+  set_sprite_prop(2, S_FLIPX);
   set_sprite_prop(3, S_FLIPX);
-  set_sprite_prop(4, S_FLIPX);
-  set_sprite_prop(5, S_FLIPX);
   move_sprite(0, player_x, player_y);
-  move_sprite(1, player_x, player_y + 8);
-  move_sprite(2, player_x, player_y + 16);
-  move_sprite(3, player_x + 8, player_y);
-  move_sprite(4, player_x + 8, player_y + 8);
-  move_sprite(5, player_x + 8, player_y + 16);
+  move_sprite(1, player_x, player_y + 16);
+  move_sprite(2, player_x + 8, player_y);
+  move_sprite(3, player_x + 8, player_y + 16);
   // Arm metasprite
-  set_sprite_tile(6, 3);
-  set_sprite_tile(7, 4);
-  set_sprite_tile(8, 5);
-  set_sprite_tile(9, 6);
-  set_sprite_tile(10, 7);
-  set_sprite_tile(11, 8);
+  set_sprite_tile(4, 4);
+  set_sprite_tile(5, 6);
+  set_sprite_tile(6, 8);
+  set_sprite_tile(7, 10);
   uint8_t arm_x = player_x - 8;
   uint8_t arm_y = player_y + 8;
-  move_sprite(6, arm_x, arm_y);
-  move_sprite(7, arm_x + 8, arm_y);
-  move_sprite(8, arm_x, arm_y + 8);
-  move_sprite(9, arm_x + 8, arm_y + 8);
-  move_sprite(10, arm_x, arm_y + 16);
-  move_sprite(11, arm_x + 8, arm_y + 16);
+  move_sprite(4, arm_x, arm_y);
+  move_sprite(5, arm_x + 8, arm_y);
+  move_sprite(6, arm_x, arm_y + 16);
+  move_sprite(7, arm_x + 8, arm_y + 16);
   // Arm metasprite 2
-  set_sprite_tile(12, 3);
-  set_sprite_tile(13, 4);
-  set_sprite_tile(14, 5);
-  set_sprite_tile(15, 6);
-  set_sprite_tile(16, 7);
-  set_sprite_tile(17, 8);
+  set_sprite_tile(8, 4);
+  set_sprite_tile(9, 6);
+  set_sprite_tile(10, 8);
+  set_sprite_tile(11, 10);
   arm_x = player_x + 8;
   arm_y = player_y + 8;
-  move_sprite(12, arm_x + 8, arm_y);
-  move_sprite(13, arm_x, arm_y);
-  move_sprite(14, arm_x + 8, arm_y + 8);
-  move_sprite(15, arm_x, arm_y + 8);
-  move_sprite(16, arm_x + 8, arm_y + 16);
-  move_sprite(17, arm_x, arm_y + 16);
-  set_sprite_prop(12, S_FLIPX);
-  set_sprite_prop(13, S_FLIPX);
-  set_sprite_prop(14, S_FLIPX);
-  set_sprite_prop(15, S_FLIPX);
-  set_sprite_prop(16, S_FLIPX);
-  set_sprite_prop(17, S_FLIPX);
+  move_sprite(8, arm_x + 8, arm_y);
+  move_sprite(9, arm_x, arm_y);
+  move_sprite(10, arm_x + 8, arm_y + 16);
+  move_sprite(11, arm_x, arm_y + 16);
+  set_sprite_prop(8, S_FLIPX);
+  set_sprite_prop(9, S_FLIPX);
+  set_sprite_prop(10, S_FLIPX);
+  set_sprite_prop(11, S_FLIPX);
 
   DISPLAY_ON;
 }
