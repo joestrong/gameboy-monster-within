@@ -1,6 +1,6 @@
 .PHONY: gfx
 
-CC	= ${GBDK_HOME}/bin/lcc -Wa-l -Wl-m -Wl-j
+CC	= ${GBDK_HOME}/bin/lcc -Wa-l -Wl-m -Wl-j -Wm-yC
 
 all: gfx main
 

@@ -1,5 +1,6 @@
 #include <stdint.h>
 #include <gb/gb.h>
+#include <gb/cgb.h>
 #include "./tiles/gbcompologo.h"
 #include "./tiles/title.h"
 #include "./tiles/overworld.h"
@@ -38,7 +39,12 @@ void main() {
   LCDC_REG = LCDCF_OFF | LCDCF_BG8800 | LCDCF_BG9800 | LCDCF_BGON | LCDCF_OBJON;
 
   // Set pallette defaults
-  BGP_REG = OBP0_REG = OBP1_REG = 0xE4U;
+  const UWORD palettes[] = {
+      RGB_WHITE, RGB_LIGHTGRAY, RGB_DARKGRAY, RGB_BLACK, // B&W
+      RGB_WHITE, RGB_BLUE, RGB_DARKBLUE, RGB_BLACK, // Blue
+  };
+  set_bkg_palette(0, 1, &palettes[0]);
+  set_sprite_palette(0, 1, &palettes[4]);
 
   #if skip_intro == 1
     state = 2;
