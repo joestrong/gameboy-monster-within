@@ -1,6 +1,7 @@
 #include <stdint.h>
 #include <gb/gb.h>
 #include <gb/cgb.h>
+#include <gbdk/metasprites.h>
 #include "./tiles/gbcompologo.h"
 #include "./tiles/title.h"
 #include "./tiles/overworld.h"
@@ -154,43 +155,10 @@ void loadGame() {
   counter = 0;
 
   set_sprite_data(0x00, sprites_TILE_COUNT, sprites_tiles);
-  // Player metasprite
-  set_sprite_tile(0, 0);
-  set_sprite_tile(1, 2);
-  set_sprite_tile(2, 0);
-  set_sprite_tile(3, 2);
-  set_sprite_prop(2, S_FLIPX);
-  set_sprite_prop(3, S_FLIPX);
-  move_sprite(0, player_x, player_y);
-  move_sprite(1, player_x, player_y + 16);
-  move_sprite(2, player_x + 8, player_y);
-  move_sprite(3, player_x + 8, player_y + 16);
-  // Arm metasprite
-  set_sprite_tile(4, 4);
-  set_sprite_tile(5, 6);
-  set_sprite_tile(6, 8);
-  set_sprite_tile(7, 10);
-  uint8_t arm_x = player_x - 8;
-  uint8_t arm_y = player_y + 8;
-  move_sprite(4, arm_x, arm_y);
-  move_sprite(5, arm_x + 8, arm_y);
-  move_sprite(6, arm_x, arm_y + 16);
-  move_sprite(7, arm_x + 8, arm_y + 16);
-  // Arm metasprite 2
-  set_sprite_tile(8, 4);
-  set_sprite_tile(9, 6);
-  set_sprite_tile(10, 8);
-  set_sprite_tile(11, 10);
-  arm_x = player_x + 8;
-  arm_y = player_y + 8;
-  move_sprite(8, arm_x + 8, arm_y);
-  move_sprite(9, arm_x, arm_y);
-  move_sprite(10, arm_x + 8, arm_y + 16);
-  move_sprite(11, arm_x, arm_y + 16);
-  set_sprite_prop(8, S_FLIPX);
-  set_sprite_prop(9, S_FLIPX);
-  set_sprite_prop(10, S_FLIPX);
-  set_sprite_prop(11, S_FLIPX);
+
+  move_metasprite(sprites_metasprites[0], 0, 0, player_x, player_y);
+  move_metasprite(sprites_metasprites[1], 0, 4, player_x - 8, player_y + 8);
+  move_metasprite_vflip(sprites_metasprites[1], 0, 8, player_x + 8, player_y + 8);
 
   DISPLAY_ON;
 }
