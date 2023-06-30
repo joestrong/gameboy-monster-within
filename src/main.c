@@ -7,7 +7,7 @@
 #include "./tiles/overworld.h"
 #include "./tiles/sprites.h"
 
-#define skip_intro 1
+#define skip_intro 0
 
 #define MIN(A,B) ((A)<(B)?(A):(B))
 #define bigmap_mapHeight 32
@@ -35,19 +35,22 @@ int8_t old_map_pos_y = 0;
 uint8_t player_x = 72;
 uint8_t player_y = 80;
 
+const UWORD palettes[] = {
+    RGB_WHITE, RGB_WHITE, RGB_WHITE, RGB_WHITE, // BG Fade-in
+    RGB_WHITE, RGB_LIGHTGRAY, RGB_WHITE, RGB_WHITE, // BG Fade-in
+    RGB_WHITE, RGB_LIGHTGRAY, RGB_DARKGRAY, RGB_WHITE, // BG Fade-in 2
+    RGB_WHITE, RGB_LIGHTGRAY, RGB_DARKGRAY, RGB_BLACK, // BG B&W
+    RGB_WHITE, RGB_BLUE, RGB_DARKBLUE, RGB_BLACK, // Sprite Blue
+};
+
 void main() {
   DISPLAY_OFF;
   LCDC_REG = LCDCF_OFF | LCDCF_BG8800 | LCDCF_BG9800 | LCDCF_BGON | LCDCF_OBJON;
   SPRITES_8x16;
 
   // Set pallette defaults
-  const UWORD palettes[] = {
-      RGB_WHITE, RGB_LIGHTGRAY, RGB_DARKGRAY, RGB_BLACK, // B&W
-      RGB_WHITE, RGB_BLUE, RGB_DARKBLUE, RGB_BLACK, // Blue
-  };
   set_bkg_palette(0, 1, &palettes[0]);
-  set_sprite_palette(0, 1, &palettes[4]);
-
+  set_sprite_palette(0, 1, &palettes[4*4]);
   #if skip_intro == 1
     state = 2;
     loadGame();
@@ -76,7 +79,7 @@ void loadCompoLogoScreen() {
   set_bkg_data(0x00, gbcompologo_TILE_COUNT, gbcompologo_tiles);
   set_bkg_tiles(0, 0, 20, 18, gbcompologo_map);
   counter = 0;
-  BGP_REG = 0x00;
+  set_bkg_palette(0, 1, &palettes[0]);
    
   DISPLAY_ON;
 }
@@ -84,22 +87,22 @@ void loadCompoLogoScreen() {
 void updateCompoLogoScreen() {
   switch (counter) {
     case 5:
-      BGP_REG = 0x04;
+      set_bkg_palette(0, 1, &palettes[1*4]);
       break;
     case 10:
-      BGP_REG = 0x24;
+      set_bkg_palette(0, 1, &palettes[2*4]);
       break;
     case 15:
-      BGP_REG = 0xE4;
+      set_bkg_palette(0, 1, &palettes[3*4]);
       break;
     case 120:
-      BGP_REG = 0x24;
+      set_bkg_palette(0, 1, &palettes[2*4]);
       break;
     case 125:
-      BGP_REG = 0x04;
+      set_bkg_palette(0, 1, &palettes[1*4]);
       break;
     case 130:
-      BGP_REG = 0x00;
+      set_bkg_palette(0, 1, &palettes[0]);
       break;
     case 135:
       state = 1;
@@ -122,22 +125,22 @@ void loadTitleScreen() {
 void updateTitleScreen() {
   switch (counter) {
     case 5:
-      BGP_REG = 0x04;
+      set_bkg_palette(0, 1, &palettes[1*4]);
       break;
     case 10:
-      BGP_REG = 0x24;
+      set_bkg_palette(0, 1, &palettes[2*4]);
       break;
     case 15:
-      BGP_REG = 0xE4;
+      set_bkg_palette(0, 1, &palettes[3*4]);
       break;
     case 160:
-      BGP_REG = 0x24;
+      set_bkg_palette(0, 1, &palettes[2*4]);
       break;
     case 165:
-      BGP_REG = 0x04;
+      set_bkg_palette(0, 1, &palettes[1*4]);
       break;
     case 170:
-      BGP_REG = 0x00;
+      set_bkg_palette(0, 1, &palettes[0]);
       break;
     case 175:
       state = 2;
@@ -166,13 +169,13 @@ void loadGame() {
 void updateGame() {
   switch (counter) {
     case 5:
-      BGP_REG = 0x04;
+      set_bkg_palette(0, 1, &palettes[1*4]);
       break;
     case 10:
-      BGP_REG = 0x24;
+      set_bkg_palette(0, 1, &palettes[2*4]);
       break;
     case 15:
-      BGP_REG = 0xE4;
+      set_bkg_palette(0, 1, &palettes[3*4]);
       break;
   }
   if (counter < 15) {
