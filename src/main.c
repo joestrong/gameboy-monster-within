@@ -7,7 +7,7 @@
 #include "./tiles/overworld.h"
 #include "./tiles/sprites.h"
 
-#define skip_intro 0
+#define skip_intro 1
 
 #define MIN(A,B) ((A)<(B)?(A):(B))
 #define bigmap_mapHeight 32
@@ -159,9 +159,9 @@ void loadGame() {
 
   set_sprite_data(0x00, sprites_TILE_COUNT, sprites_tiles);
 
-  move_metasprite(sprites_metasprites[0], 0, 0, player_x, player_y);
-  move_metasprite(sprites_metasprites[1], 0, 4, player_x - 8, player_y + 8);
-  move_metasprite_vflip(sprites_metasprites[1], 0, 8, player_x + 8, player_y + 8);
+    move_metasprite(sprites_metasprites[0], 0, 0, player_x, player_y);
+    move_metasprite(sprites_metasprites[2], 0, 4, player_x - 8, player_y + 8);
+    move_metasprite_vflip(sprites_metasprites[2], 0, 8, player_x + 8, player_y + 8);
 
   DISPLAY_ON;
 }
@@ -184,15 +184,27 @@ void updateGame() {
 
   int keys = joypad();
   if (keys & J_UP) {
+    move_metasprite(sprites_metasprites[0], 0, 0, player_x, player_y);
+    move_metasprite(sprites_metasprites[2], 0, 4, player_x - 8, player_y + 8);
+    move_metasprite_vflip(sprites_metasprites[2], 0, 8, player_x + 8, player_y + 8);
     camera_y--;
   }
   if (keys & J_DOWN) {
+    move_metasprite(sprites_metasprites[0], 0, 0, player_x, player_y);
+    move_metasprite(sprites_metasprites[2], 0, 4, player_x - 8, player_y + 8);
+    move_metasprite_vflip(sprites_metasprites[2], 0, 8, player_x + 8, player_y + 8);
     camera_y++;
   }
   if (keys & J_LEFT) {
+    move_metasprite(sprites_metasprites[1], 0, 4, player_x, player_y);
+    move_metasprite(sprites_metasprites[2], 0, 8, player_x - 8, player_y + 8);
+    move_metasprite_vflip(sprites_metasprites[2], 0, 0, player_x + 8, player_y + 8);
     camera_x--;
   }
   if (keys & J_RIGHT) {
+    move_metasprite_vflip(sprites_metasprites[1], 0, 4, player_x, player_y);
+    move_metasprite(sprites_metasprites[2], 0, 0, player_x - 8, player_y + 8);
+    move_metasprite_vflip(sprites_metasprites[2], 0, 8, player_x + 8, player_y + 8);
     camera_x++;
   }
 
