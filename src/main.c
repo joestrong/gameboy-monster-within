@@ -154,7 +154,7 @@ void loadGame() {
   DISPLAY_OFF;
 
   set_bkg_data(0x00, overworld_TILE_COUNT, overworld_tiles);
-  set_bkg_submap(0, 0, 20, 18, overworld_map, bigmap_mapWidth);
+  set_bkg_submap(0, 0, 21, 19, overworld_map, bigmap_mapWidth);
   counter = 0;
 
   set_sprite_data(0x00, sprites_TILE_COUNT, sprites_tiles);
