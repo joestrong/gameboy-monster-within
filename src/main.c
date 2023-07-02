@@ -13,6 +13,14 @@
 #define bigmap_mapHeight 32
 #define bigmap_mapWidth 32
 
+#define player_sprite_x_offset 16
+#define player_sprite_y_offset 16
+
+#define DIR_UP 1
+#define DIR_RIGHT 2
+#define DIR_DOWN 4
+#define DIR_LEFT 8
+
 void loadCompoLogoScreen();
 void updateCompoLogoScreen();
 void loadTitleScreen();
@@ -34,6 +42,9 @@ int8_t old_map_pos_x = 0;
 int8_t old_map_pos_y = 0;
 uint8_t player_x = 72;
 uint8_t player_y = 80;
+uint8_t player_sprite_x = 0;
+uint8_t player_sprite_y = 0;
+uint8_t direction = 0;
 
 const UWORD palettes[] = {
     RGB_WHITE, RGB_WHITE, RGB_WHITE, RGB_WHITE, // BG Fade-in
@@ -159,9 +170,12 @@ void loadGame() {
 
   set_sprite_data(0x00, sprites_TILE_COUNT, sprites_tiles);
 
-    move_metasprite(sprites_metasprites[0], 0, 0, player_x, player_y);
-    move_metasprite(sprites_metasprites[2], 0, 4, player_x - 8, player_y + 8);
-    move_metasprite_vflip(sprites_metasprites[2], 0, 8, player_x + 8, player_y + 8);
+  player_sprite_x = player_x + player_sprite_x_offset;
+  player_sprite_y = player_y + player_sprite_y_offset;
+
+    move_metasprite(sprites_metasprites[0], 0, 0, player_sprite_x, player_sprite_y);
+    move_metasprite(sprites_metasprites[2], 0, 4, player_sprite_x - 8, player_sprite_y + 8);
+    move_metasprite_vflip(sprites_metasprites[2], 0, 8, player_sprite_x + 8, player_sprite_y + 8);
 
   DISPLAY_ON;
 }
@@ -182,29 +196,38 @@ void updateGame() {
     counter++;
   }
 
+  player_sprite_x = player_x + player_sprite_x_offset;
+  player_sprite_y = player_y + player_sprite_y_offset;
+
+  direction = 0;
+
   int keys = joypad();
+
   if (keys & J_UP) {
-    move_metasprite(sprites_metasprites[0], 0, 0, player_x, player_y);
-    move_metasprite(sprites_metasprites[2], 0, 4, player_x - 8, player_y + 8);
-    move_metasprite_vflip(sprites_metasprites[2], 0, 8, player_x + 8, player_y + 8);
+    move_metasprite(sprites_metasprites[0], 0, 0, player_sprite_x, player_sprite_y);
+    move_metasprite(sprites_metasprites[2], 0, 4, player_sprite_x - 8, player_sprite_y + 8);
+    move_metasprite_vflip(sprites_metasprites[2], 0, 8, player_sprite_x + 8, player_sprite_y + 8);
+    direction |= DIR_UP;
     camera_y--;
-  }
-  if (keys & J_DOWN) {
-    move_metasprite(sprites_metasprites[0], 0, 0, player_x, player_y);
-    move_metasprite(sprites_metasprites[2], 0, 4, player_x - 8, player_y + 8);
-    move_metasprite_vflip(sprites_metasprites[2], 0, 8, player_x + 8, player_y + 8);
+  } else if (keys & J_DOWN) {
+    move_metasprite(sprites_metasprites[0], 0, 0, player_sprite_x, player_sprite_y);
+    move_metasprite(sprites_metasprites[2], 0, 4, player_sprite_x - 8, player_sprite_y + 8);
+    move_metasprite_vflip(sprites_metasprites[2], 0, 8, player_sprite_x + 8, player_sprite_y + 8);
+    direction |= DIR_DOWN;
     camera_y++;
   }
+
   if (keys & J_LEFT) {
-    move_metasprite(sprites_metasprites[1], 0, 4, player_x, player_y);
-    move_metasprite(sprites_metasprites[2], 0, 8, player_x - 8, player_y + 8);
-    move_metasprite_vflip(sprites_metasprites[2], 0, 0, player_x + 8, player_y + 8);
+    move_metasprite(sprites_metasprites[1], 0, 4, player_sprite_x, player_sprite_y);
+    move_metasprite(sprites_metasprites[2], 0, 8, player_sprite_x - 8, player_sprite_y + 8);
+    move_metasprite_vflip(sprites_metasprites[2], 0, 0, player_sprite_x + 8, player_sprite_y + 8);
+    direction |= DIR_LEFT;
     camera_x--;
-  }
-  if (keys & J_RIGHT) {
-    move_metasprite_vflip(sprites_metasprites[1], 0, 4, player_x, player_y);
-    move_metasprite(sprites_metasprites[2], 0, 0, player_x - 8, player_y + 8);
-    move_metasprite_vflip(sprites_metasprites[2], 0, 8, player_x + 8, player_y + 8);
+  } else if (keys & J_RIGHT) {
+    move_metasprite_vflip(sprites_metasprites[1], 0, 4, player_sprite_x, player_sprite_y);
+    move_metasprite(sprites_metasprites[2], 0, 0, player_sprite_x - 8, player_sprite_y + 8);
+    move_metasprite_vflip(sprites_metasprites[2], 0, 8, player_sprite_x + 8, player_sprite_y + 8);
+    direction |= DIR_RIGHT;
     camera_x++;
   }
 
@@ -214,8 +237,33 @@ void updateGame() {
   if (camera_y < 0) {
     camera_y = 0;
   }
+
+  check_collision();
   
   set_camera();
+}
+
+void check_collision() {
+  uint8_t offset_x = (direction & DIR_RIGHT) ? 13 : 3;
+  uint8_t offset_y = (direction & DIR_DOWN) ? 6 : 2;
+  uint8_t x_tile = ((camera_x + player_x + offset_x) % 255) >> 3u;
+  uint8_t y_tile = ((camera_y + player_y + offset_y) % 255) >> 3u;
+  uint8_t tile_id = get_bkg_tile_xy(x_tile, y_tile);
+  if (tile_id < 2 || (tile_id > 5 && tile_id < 0x0C)) {
+    // Collide
+    if (direction & DIR_UP) {
+      camera_y++;
+    }
+    if (direction & DIR_DOWN) {
+      camera_y--;
+    }
+    if (direction & DIR_LEFT) {
+      camera_x++;
+    }
+    if (direction & DIR_RIGHT) {
+      camera_x--;
+    }
+  }
 }
 
 void set_camera() {
