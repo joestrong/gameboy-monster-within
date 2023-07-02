@@ -208,13 +208,13 @@ void updateGame() {
     move_metasprite(sprites_metasprites[2], 0, 4, player_sprite_x - 8, player_sprite_y + 8);
     move_metasprite_vflip(sprites_metasprites[2], 0, 8, player_sprite_x + 8, player_sprite_y + 8);
     direction |= DIR_UP;
-    camera_y--;
+    player_y--;
   } else if (keys & J_DOWN) {
     move_metasprite(sprites_metasprites[0], 0, 0, player_sprite_x, player_sprite_y);
     move_metasprite(sprites_metasprites[2], 0, 4, player_sprite_x - 8, player_sprite_y + 8);
     move_metasprite_vflip(sprites_metasprites[2], 0, 8, player_sprite_x + 8, player_sprite_y + 8);
     direction |= DIR_DOWN;
-    camera_y++;
+    player_y++;
   }
 
   if (keys & J_LEFT) {
@@ -222,23 +222,35 @@ void updateGame() {
     move_metasprite(sprites_metasprites[2], 0, 8, player_sprite_x - 8, player_sprite_y + 8);
     move_metasprite_vflip(sprites_metasprites[2], 0, 0, player_sprite_x + 8, player_sprite_y + 8);
     direction |= DIR_LEFT;
-    camera_x--;
+    player_x--;
   } else if (keys & J_RIGHT) {
     move_metasprite_vflip(sprites_metasprites[1], 0, 4, player_sprite_x, player_sprite_y);
     move_metasprite(sprites_metasprites[2], 0, 0, player_sprite_x - 8, player_sprite_y + 8);
     move_metasprite_vflip(sprites_metasprites[2], 0, 8, player_sprite_x + 8, player_sprite_y + 8);
     direction |= DIR_RIGHT;
-    camera_x++;
-  }
-
-  if (camera_x < 0) {
-    camera_x = 0;
-  }
-  if (camera_y < 0) {
-    camera_y = 0;
+    player_x++;
   }
 
   check_collision();
+
+  // Camera updates
+
+  if (player_x < 72 && camera_x > 0) {
+    player_x = 72;
+    camera_x--;
+  }
+  if (player_x > 72 && camera_x + 160 < overworld_WIDTH) {
+    player_x = 72;
+    camera_x++;
+  }
+  if (player_y < 80 && camera_y > 0) {
+    player_y = 80;
+    camera_y--;
+  }
+  if (player_y > 80 && camera_y + 144 < overworld_HEIGHT) {
+    player_y = 80;
+    camera_y++;
+  }
   
   set_camera();
 }
@@ -252,16 +264,16 @@ void check_collision() {
   if (tile_id < 2 || (tile_id > 5 && tile_id < 0x0C)) {
     // Collide
     if (direction & DIR_UP) {
-      camera_y++;
+      player_y++;
     }
     if (direction & DIR_DOWN) {
-      camera_y--;
+      player_y--;
     }
     if (direction & DIR_LEFT) {
-      camera_x++;
+      player_x++;
     }
     if (direction & DIR_RIGHT) {
-      camera_x--;
+      player_x--;
     }
   }
 }
