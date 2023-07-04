@@ -33,6 +33,7 @@ void loadTitleScreen();
 void updateTitleScreen();
 void loadGame();
 void updateGame();
+void check_collision();
 void set_camera();
 
 uint8_t state = 0; // 0 - Compo Logo 1 - Title, 2 - Game
