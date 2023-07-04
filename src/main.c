@@ -8,6 +8,7 @@
 #include "./tiles/player.h"
 #include "./tiles/arm_h.h"
 #include "./tiles/arm_v.h"
+#include "./tiles/dialog.h"
 
 #define skip_intro 1
 
@@ -27,17 +28,23 @@
 #define DIR_DOWN 4
 #define DIR_LEFT 8
 
+#define EVENT_PRISON_CELL_START 0
+#define EVENT_PRISON_CELL 1
+
 void loadCompoLogoScreen();
 void updateCompoLogoScreen();
 void loadTitleScreen();
 void updateTitleScreen();
 void loadGame();
 void updateGame();
+void process_events();
 void check_collision();
 void set_camera();
 
 uint8_t state = 0; // 0 - Compo Logo 1 - Title, 2 - Game
+uint8_t event_state = 0; // 0 - prison cell start, 1 - prison cell
 uint8_t counter = 0;
+uint8_t fade_counter = 0;
 
 int16_t camera_x = 0;
 int16_t camera_y = 0;
@@ -59,16 +66,18 @@ const UWORD palettes[] = {
     RGB_WHITE, RGB_LIGHTGRAY, RGB_DARKGRAY, RGB_WHITE, // BG Fade-in 2
     RGB_WHITE, RGB_LIGHTGRAY, RGB_DARKGRAY, RGB_BLACK, // BG B&W
     RGB_WHITE, RGB_BLUE, RGB_DARKBLUE, RGB_BLACK, // Sprite Blue
+    RGB_YELLOW, RGB_WHITE, RGB_BLACK, RGB_BLACK, // Dialog
 };
 
 void main() {
   DISPLAY_OFF;
-  LCDC_REG = LCDCF_OFF | LCDCF_BG8800 | LCDCF_BG9800 | LCDCF_BGON | LCDCF_OBJON;
+  LCDC_REG = LCDCF_OFF | LCDCF_BG8800 | LCDCF_BG9800 | LCDCF_WIN9C00 | LCDCF_BGON | LCDCF_OBJON;
   SPRITES_8x16;
 
   // Set pallette defaults
   set_bkg_palette(0, 1, &palettes[0]);
   set_sprite_palette(0, 1, &palettes[4*4]);
+  set_bkg_palette(1, 1, &palettes[5*4]); // Dialog
   #if skip_intro == 1
     state = 2;
     loadGame();
@@ -96,14 +105,14 @@ void main() {
 void loadCompoLogoScreen() {
   set_bkg_data(0x00, gbcompologo_TILE_COUNT, gbcompologo_tiles);
   set_bkg_tiles(0, 0, 20, 18, gbcompologo_map);
-  counter = 0;
+  fade_counter = 0;
   set_bkg_palette(0, 1, &palettes[0]);
    
   DISPLAY_ON;
 }
 
 void updateCompoLogoScreen() {
-  switch (counter) {
+  switch (fade_counter) {
     case 5:
       set_bkg_palette(0, 1, &palettes[1*4]);
       break;
@@ -127,7 +136,7 @@ void updateCompoLogoScreen() {
       loadTitleScreen();
       break;
   }
-  counter++;
+  fade_counter++;
 }
 
 void loadTitleScreen() {
@@ -135,13 +144,13 @@ void loadTitleScreen() {
 
   set_bkg_data(0x00, title_TILE_COUNT, title_tiles);
   set_bkg_tiles(0, 0, 20, 18, title_map);
-  counter = 0;
+  fade_counter = 0;
    
   DISPLAY_ON;
 }
 
 void updateTitleScreen() {
-  switch (counter) {
+  switch (fade_counter) {
     case 5:
       set_bkg_palette(0, 1, &palettes[1*4]);
       break;
@@ -165,7 +174,7 @@ void updateTitleScreen() {
       loadGame();
       break;
   }
-  counter++;
+  fade_counter++;
 }
 
 void loadGame() {
@@ -173,7 +182,13 @@ void loadGame() {
 
   set_bkg_data(0x00, overworld_TILE_COUNT, overworld_tiles);
   set_bkg_submap(0, 0, 21, 19, overworld_map, bigmap_mapWidth);
-  counter = 0;
+  fade_counter = 0;
+
+  set_bkg_data(overworld_TILE_COUNT, dialog_TILE_COUNT, dialog_tiles);
+  VBK_REG=VBK_ATTRIBUTES;
+  set_win_tiles(0, 0, 32, 5, dialog_map_attributes);
+  VBK_REG=VBK_TILES;
+  set_win_based_tiles(0, 0, 32, 5, dialog_map, overworld_TILE_COUNT);
 
   set_sprite_data(0x00, player_TILE_COUNT, player_tiles);
   set_sprite_data(arm_h_baseTile, arm_h_TILE_COUNT, arm_h_tiles);
@@ -190,7 +205,7 @@ void loadGame() {
 }
 
 void updateGame() {
-  switch (counter) {
+  switch (fade_counter) {
     case 5:
       set_bkg_palette(0, 1, &palettes[1*4]);
       break;
@@ -201,9 +216,11 @@ void updateGame() {
       set_bkg_palette(0, 1, &palettes[3*4]);
       break;
   }
-  if (counter < 15) {
-    counter++;
+  if (fade_counter < 15) {
+    fade_counter++;
   }
+
+  process_events();
 
   player_sprite_x = player_x + player_sprite_x_offset;
   player_sprite_y = player_y + player_sprite_y_offset;
@@ -266,6 +283,23 @@ void updateGame() {
   }
   
   set_camera();
+
+  counter++;
+}
+
+void process_events() {
+  switch (event_state) {
+    case EVENT_PRISON_CELL_START:
+      if (counter == 180) {
+        // show dialog
+        SHOW_WIN;
+        WX_REG = 7;
+        WY_REG = 104;
+      }
+      break;
+    case EVENT_PRISON_CELL:
+      break;
+  }
 }
 
 void check_collision() {
