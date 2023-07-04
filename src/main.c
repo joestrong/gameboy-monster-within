@@ -5,13 +5,19 @@
 #include "./tiles/gbcompologo.h"
 #include "./tiles/title.h"
 #include "./tiles/overworld.h"
-#include "./tiles/sprites.h"
+#include "./tiles/player.h"
+#include "./tiles/arm_h.h"
+#include "./tiles/arm_v.h"
 
 #define skip_intro 1
 
 #define MIN(A,B) ((A)<(B)?(A):(B))
 #define bigmap_mapHeight 32
 #define bigmap_mapWidth 32
+
+#define player_baseTile 0
+#define arm_h_baseTile player_TILE_COUNT
+#define arm_v_baseTile arm_h_baseTile + arm_h_TILE_COUNT
 
 #define player_sprite_x_offset 16
 #define player_sprite_y_offset 16
@@ -168,14 +174,16 @@ void loadGame() {
   set_bkg_submap(0, 0, 21, 19, overworld_map, bigmap_mapWidth);
   counter = 0;
 
-  set_sprite_data(0x00, sprites_TILE_COUNT, sprites_tiles);
+  set_sprite_data(0x00, player_TILE_COUNT, player_tiles);
+  set_sprite_data(arm_h_baseTile, arm_h_TILE_COUNT, arm_h_tiles);
+  set_sprite_data(arm_v_baseTile, arm_v_TILE_COUNT, arm_v_tiles);
 
   player_sprite_x = player_x + player_sprite_x_offset;
   player_sprite_y = player_y + player_sprite_y_offset;
 
-    move_metasprite(sprites_metasprites[0], 0, 0, player_sprite_x, player_sprite_y);
-    move_metasprite(sprites_metasprites[2], 0, 4, player_sprite_x - 8, player_sprite_y + 8);
-    move_metasprite_vflip(sprites_metasprites[2], 0, 8, player_sprite_x + 8, player_sprite_y + 8);
+  move_metasprite(player_metasprites[0], player_baseTile, 0, player_sprite_x, player_sprite_y);
+  move_metasprite(arm_v_metasprites[0], arm_v_baseTile, 4, player_sprite_x - 8, player_sprite_y + 8);
+  move_metasprite_vflip(arm_v_metasprites[0], arm_v_baseTile, 8, player_sprite_x + 8, player_sprite_y + 8);
 
   DISPLAY_ON;
 }
@@ -204,29 +212,33 @@ void updateGame() {
   int keys = joypad();
 
   if (keys & J_UP) {
-    move_metasprite(sprites_metasprites[0], 0, 0, player_sprite_x, player_sprite_y);
-    move_metasprite(sprites_metasprites[2], 0, 4, player_sprite_x - 8, player_sprite_y + 8);
-    move_metasprite_vflip(sprites_metasprites[2], 0, 8, player_sprite_x + 8, player_sprite_y + 8);
+    move_metasprite(player_metasprites[0], player_baseTile, 0, player_sprite_x, player_sprite_y);
+    move_metasprite(arm_v_metasprites[0], arm_v_baseTile, 4, player_sprite_x - 8, player_sprite_y + 8);
+    move_metasprite_vflip(arm_v_metasprites[0], arm_v_baseTile, 8, player_sprite_x + 8, player_sprite_y + 8);
     direction |= DIR_UP;
     player_y--;
   } else if (keys & J_DOWN) {
-    move_metasprite(sprites_metasprites[0], 0, 0, player_sprite_x, player_sprite_y);
-    move_metasprite(sprites_metasprites[2], 0, 4, player_sprite_x - 8, player_sprite_y + 8);
-    move_metasprite_vflip(sprites_metasprites[2], 0, 8, player_sprite_x + 8, player_sprite_y + 8);
+    move_metasprite(player_metasprites[0], player_baseTile, 0, player_sprite_x, player_sprite_y);
+    move_metasprite(arm_v_metasprites[0], arm_v_baseTile, 4, player_sprite_x - 8, player_sprite_y + 8);
+    move_metasprite_vflip(arm_v_metasprites[0], arm_v_baseTile, 8, player_sprite_x + 8, player_sprite_y + 8);
     direction |= DIR_DOWN;
     player_y++;
   }
 
   if (keys & J_LEFT) {
-    move_metasprite(sprites_metasprites[1], 0, 4, player_sprite_x, player_sprite_y);
-    move_metasprite(sprites_metasprites[2], 0, 8, player_sprite_x - 8, player_sprite_y + 8);
-    move_metasprite_vflip(sprites_metasprites[2], 0, 0, player_sprite_x + 8, player_sprite_y + 8);
+    move_metasprite(arm_h_metasprites[0], arm_h_baseTile, 0, player_sprite_x - 8, player_sprite_y);
+    move_metasprite(player_metasprites[1], player_baseTile, 3, player_sprite_x, player_sprite_y);
+    move_metasprite(arm_h_metasprites[0], arm_h_baseTile, 7, player_sprite_x - 8, player_sprite_y - 2);
+    hide_sprite(10);
+    hide_sprite(11);
     direction |= DIR_LEFT;
     player_x--;
   } else if (keys & J_RIGHT) {
-    move_metasprite_vflip(sprites_metasprites[1], 0, 4, player_sprite_x, player_sprite_y);
-    move_metasprite(sprites_metasprites[2], 0, 0, player_sprite_x - 8, player_sprite_y + 8);
-    move_metasprite_vflip(sprites_metasprites[2], 0, 8, player_sprite_x + 8, player_sprite_y + 8);
+    move_metasprite_vflip(arm_h_metasprites[0], arm_h_baseTile, 0, player_sprite_x + 8, player_sprite_y);
+    move_metasprite_vflip(player_metasprites[1], player_baseTile, 3, player_sprite_x, player_sprite_y);
+    move_metasprite_vflip(arm_h_metasprites[0], arm_h_baseTile, 7, player_sprite_x + 8, player_sprite_y - 2);
+    hide_sprite(10);
+    hide_sprite(11);
     direction |= DIR_RIGHT;
     player_x++;
   }
