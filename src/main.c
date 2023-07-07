@@ -1,4 +1,5 @@
 #include <stdint.h>
+#include <string.h>
 #include <gb/gb.h>
 #include <gb/cgb.h>
 #include <gbdk/metasprites.h>
@@ -17,8 +18,8 @@
 #define bigmap_mapHeight 32
 #define bigmap_mapWidth 32
 
-#define font_BYTE_OFFSET 258
-#define font_TILE_COUNT 43
+#define font_BYTE_OFFSET 394
+#define font_TILE_COUNT 26
 
 #define overworld_baseTile 0
 #define font_baseTile overworld_TILE_COUNT
@@ -308,6 +309,9 @@ void process_events() {
         SHOW_WIN;
         WX_REG = 7;
         WY_REG = 104;
+        char* text = "WHO AM I";
+        fill_win_rect(1, 1, 18, 3, dialog_baseTile + 4);
+        set_win_based_tiles(1, 1, strlen(text), 1, text, font_baseTile - 65);
       }
       break;
     case EVENT_PRISON_CELL:
