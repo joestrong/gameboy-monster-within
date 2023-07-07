@@ -39,7 +39,15 @@
 
 #define EVENT_PRISON_CELL_START 0
 #define EVENT_PRISON_CELL 1
+#define EVENT_PRISON_CELL_POST_SMASH 2
 
+#define HUD_Y 104
+#define HINT_HEIGHT 16
+
+#define HUD_DIALOG_MODE 1
+#define HUD_HINT_MODE 2
+
+void perLineInterrupt();
 void loadCompoLogoScreen();
 void updateCompoLogoScreen();
 void loadTitleScreen();
@@ -47,13 +55,18 @@ void updateTitleScreen();
 void loadGame();
 void updateGame();
 void process_events();
+void show_dialog(char* text);
+void show_hint(char* text);
+void hide_hud();
 void check_collision();
 void set_camera();
 
 uint8_t state = 0; // 0 - Compo Logo 1 - Title, 2 - Game
 uint8_t event_state = 0; // 0 - prison cell start, 1 - prison cell
-uint8_t counter = 0;
+uint16_t counter = 0;
 uint8_t fade_counter = 0;
+
+uint8_t hud_control;
 
 int16_t camera_x = 0;
 int16_t camera_y = 0;
@@ -108,6 +121,17 @@ void main() {
     if (state == 2) {
       updateGame();
     }
+  }
+}
+
+void perLineInterrupt() {
+  if (LY_REG == HUD_Y) {
+    LYC_REG = HUD_Y + HINT_HEIGHT;
+    SHOW_WIN;
+  }
+  if (hud_control & HUD_HINT_MODE && LY_REG == HUD_Y + HINT_HEIGHT) {
+    LYC_REG = HUD_Y;
+    HIDE_WIN;
   }
 }
 
@@ -203,6 +227,9 @@ void loadGame() {
   set_win_tiles(0, 0, 32, 5, dialog_map_attributes);
   VBK_REG=VBK_TILES;
   set_win_based_tiles(0, 0, 32, 5, dialog_map, dialog_baseTile);
+  WX_REG = 167;
+  WY_REG = 144;
+  SHOW_WIN;
 
   set_sprite_data(0x00, player_TILE_COUNT, player_tiles);
   set_sprite_data(arm_h_baseTile, arm_h_TILE_COUNT, arm_h_tiles);
@@ -214,6 +241,12 @@ void loadGame() {
   move_metasprite(player_metasprites[0], player_baseTile, 0, player_sprite_x, player_sprite_y);
   move_metasprite(arm_v_metasprites[0], arm_v_baseTile, 4, player_sprite_x - 8, player_sprite_y + 8);
   move_metasprite_vflip(arm_v_metasprites[0], arm_v_baseTile, 8, player_sprite_x + 8, player_sprite_y + 8);
+
+  // Set up LY=LYC interrupt
+  LYC_REG = HUD_Y;
+  STAT_REG |= STATF_LYC;
+  add_LCD(perLineInterrupt);
+  set_interrupts(VBL_IFLAG | LCD_IFLAG);
 
   DISPLAY_ON;
 }
@@ -305,18 +338,45 @@ void process_events() {
   switch (event_state) {
     case EVENT_PRISON_CELL_START:
       if (counter == 180) {
-        // show dialog
-        SHOW_WIN;
-        WX_REG = 7;
-        WY_REG = 104;
-        char* text = "WHO AM I";
-        fill_win_rect(1, 1, 18, 3, dialog_baseTile + 4);
-        set_win_based_tiles(1, 1, strlen(text), 1, text, font_baseTile - 65);
+        show_dialog("WHO AM I");
+      }
+      if (counter == 300) {
+        show_hint("     HOLD A AND B       TO TRANSFORM    ");
       }
       break;
     case EVENT_PRISON_CELL:
       break;
+    case EVENT_PRISON_CELL_POST_SMASH:
+      if (counter == 180) {
+        show_dialog("WHAT AM I");
+      }
+      if (counter == 300) {
+        hide_hud();
+      }
+      break;
+      break;
   }
+}
+
+void show_dialog(char* text) {
+  hud_control &= ~HUD_HINT_MODE;
+  WX_REG = 7;
+  WY_REG = HUD_Y;
+  fill_win_rect(1, 1, 18, 3, dialog_baseTile + 4);
+  set_win_based_tiles(1, 1, strlen(text), 1, text, font_baseTile - 65);
+}
+
+void show_hint(char* text) {
+  hud_control |= HUD_HINT_MODE;
+  WX_REG = 7;
+  WY_REG = HUD_Y;
+  fill_win_rect(0, 0, 20, 2, dialog_baseTile + 4);
+  set_win_based_tiles(0, 0, 20, 2, text, font_baseTile - 65);
+}
+
+void hide_hud() {
+  WX_REG = 167;
+  WY_REG = 144;
 }
 
 void check_collision() {
