@@ -2,6 +2,7 @@
 #include <gb/gb.h>
 #include <gb/cgb.h>
 #include <gbdk/metasprites.h>
+#include <gbdk/font.h>
 #include "./tiles/gbcompologo.h"
 #include "./tiles/title.h"
 #include "./tiles/overworld.h"
@@ -15,6 +16,13 @@
 #define MIN(A,B) ((A)<(B)?(A):(B))
 #define bigmap_mapHeight 32
 #define bigmap_mapWidth 32
+
+#define font_BYTE_OFFSET 258
+#define font_TILE_COUNT 43
+
+#define overworld_baseTile 0
+#define font_baseTile overworld_TILE_COUNT
+#define dialog_baseTile font_baseTile + font_TILE_COUNT
 
 #define player_baseTile 0
 #define arm_h_baseTile player_TILE_COUNT
@@ -180,15 +188,20 @@ void updateTitleScreen() {
 void loadGame() {
   DISPLAY_OFF;
 
-  set_bkg_data(0x00, overworld_TILE_COUNT, overworld_tiles);
-  set_bkg_submap(0, 0, 21, 19, overworld_map, bigmap_mapWidth);
   fade_counter = 0;
 
-  set_bkg_data(overworld_TILE_COUNT, dialog_TILE_COUNT, dialog_tiles);
+  // BKG
+  set_bkg_data(overworld_baseTile, overworld_TILE_COUNT, overworld_tiles);
+  set_bkg_submap(0, 0, 21, 19, overworld_map, bigmap_mapWidth);
+  // Font
+  set_bkg_1bpp_data(font_baseTile, font_TILE_COUNT, &font_spect[font_BYTE_OFFSET]);
+
+  // Window
+  set_bkg_data(dialog_baseTile, dialog_TILE_COUNT, dialog_tiles);
   VBK_REG=VBK_ATTRIBUTES;
   set_win_tiles(0, 0, 32, 5, dialog_map_attributes);
   VBK_REG=VBK_TILES;
-  set_win_based_tiles(0, 0, 32, 5, dialog_map, overworld_TILE_COUNT);
+  set_win_based_tiles(0, 0, 32, 5, dialog_map, dialog_baseTile);
 
   set_sprite_data(0x00, player_TILE_COUNT, player_tiles);
   set_sprite_data(arm_h_baseTile, arm_h_TILE_COUNT, arm_h_tiles);
