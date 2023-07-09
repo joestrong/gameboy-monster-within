@@ -47,6 +47,9 @@
 #define HUD_DIALOG_MODE 1
 #define HUD_HINT_MODE 2
 
+#define TRANSFORM_LENGTH 15 * 60 // 15 seconds
+#define TRANSFORM_COOLDOWN 15 * 60 // 15 seconds
+
 void perLineInterrupt();
 void loadCompoLogoScreen();
 void updateCompoLogoScreen();
@@ -80,7 +83,11 @@ uint8_t player_x = 72;
 uint8_t player_y = 80;
 uint8_t player_sprite_x = 0;
 uint8_t player_sprite_y = 0;
-uint8_t direction = 0;
+uint8_t direction = 4;
+uint8_t direction_pressed = 0;
+
+uint16_t transform_remaining_counter = 0;
+uint16_t transform_cooldown_counter = 0;
 
 const UWORD palettes[] = {
     RGB_WHITE, RGB_WHITE, RGB_WHITE, RGB_WHITE, // BG Fade-in
@@ -241,10 +248,6 @@ void loadGame() {
   player_sprite_x = player_x + player_sprite_x_offset;
   player_sprite_y = player_y + player_sprite_y_offset;
 
-  move_metasprite(player_metasprites[0], player_baseTile, 0, player_sprite_x, player_sprite_y);
-  move_metasprite(arm_v_metasprites[0], arm_v_baseTile, 4, player_sprite_x - 8, player_sprite_y + 8);
-  move_metasprite_vflip(arm_v_metasprites[0], arm_v_baseTile, 8, player_sprite_x + 8, player_sprite_y + 8);
-
   // Set up LY=LYC interrupt
   LYC_REG = HUD_Y;
   STAT_REG |= STATF_LYC;
@@ -275,40 +278,75 @@ void updateGame() {
   player_sprite_x = player_x + player_sprite_x_offset;
   player_sprite_y = player_y + player_sprite_y_offset;
 
-  direction = 0;
+  direction_pressed = 0;
 
   int keys = joypad();
 
+  // Controls
+
   if (keys & J_UP) {
-    move_metasprite(player_metasprites[0], player_baseTile, 0, player_sprite_x, player_sprite_y);
-    move_metasprite(arm_v_metasprites[0], arm_v_baseTile, 4, player_sprite_x - 8, player_sprite_y + 8);
-    move_metasprite_vflip(arm_v_metasprites[0], arm_v_baseTile, 8, player_sprite_x + 8, player_sprite_y + 8);
-    direction |= DIR_UP;
+    direction_pressed |= DIR_UP;
+    direction = DIR_UP;
     player_y--;
   } else if (keys & J_DOWN) {
-    move_metasprite(player_metasprites[0], player_baseTile, 0, player_sprite_x, player_sprite_y);
-    move_metasprite(arm_v_metasprites[0], arm_v_baseTile, 4, player_sprite_x - 8, player_sprite_y + 8);
-    move_metasprite_vflip(arm_v_metasprites[0], arm_v_baseTile, 8, player_sprite_x + 8, player_sprite_y + 8);
-    direction |= DIR_DOWN;
+    direction_pressed |= DIR_DOWN;
+    direction = DIR_DOWN;
     player_y++;
   }
 
   if (keys & J_LEFT) {
-    move_metasprite(arm_h_metasprites[0], arm_h_baseTile, 0, player_sprite_x - 8, player_sprite_y);
-    move_metasprite(player_metasprites[1], player_baseTile, 3, player_sprite_x, player_sprite_y);
-    move_metasprite(arm_h_metasprites[0], arm_h_baseTile, 7, player_sprite_x - 8, player_sprite_y - 2);
-    hide_sprite(10);
-    hide_sprite(11);
-    direction |= DIR_LEFT;
+    direction_pressed |= DIR_LEFT;
+    direction = DIR_LEFT;
     player_x--;
   } else if (keys & J_RIGHT) {
-    move_metasprite_vflip(arm_h_metasprites[0], arm_h_baseTile, 0, player_sprite_x + 8, player_sprite_y);
-    move_metasprite_vflip(player_metasprites[1], player_baseTile, 3, player_sprite_x, player_sprite_y);
-    move_metasprite_vflip(arm_h_metasprites[0], arm_h_baseTile, 7, player_sprite_x + 8, player_sprite_y - 2);
+    direction_pressed |= DIR_RIGHT;
+    direction = DIR_RIGHT;
+    player_x++;
+  }
+
+  if (keys & J_A && keys & J_B && transform_remaining_counter == 0) {
+    transform_remaining_counter = TRANSFORM_LENGTH;
+  }
+
+  // Animations
+
+  if (direction == DIR_UP || direction == DIR_DOWN) {
+    move_metasprite(player_metasprites[0], player_baseTile, 0, player_sprite_x, player_sprite_y);
+    if (transform_remaining_counter > 0) {
+      move_metasprite(arm_v_metasprites[0], arm_v_baseTile, 4, player_sprite_x - 8, player_sprite_y + 8);
+      move_metasprite_vflip(arm_v_metasprites[0], arm_v_baseTile, 8, player_sprite_x + 8, player_sprite_y + 8);
+    } else {
+      move_metasprite(arm_v_metasprites[0], arm_v_baseTile, 4, 0, 0);
+      move_metasprite_vflip(arm_v_metasprites[0], arm_v_baseTile, 8, 0, 0);
+    }
+  }
+  if (direction == DIR_LEFT) {
+    move_metasprite(player_metasprites[1], player_baseTile, 3, player_sprite_x, player_sprite_y);
+    if (transform_remaining_counter > 0) {
+    move_metasprite(arm_h_metasprites[0], arm_h_baseTile, 0, player_sprite_x - 8, player_sprite_y);
+    move_metasprite(arm_h_metasprites[0], arm_h_baseTile, 0, player_sprite_x - 8, player_sprite_y);
+    move_metasprite(player_metasprites[1], player_baseTile, 3, player_sprite_x, player_sprite_y);
+      move_metasprite(arm_h_metasprites[0], arm_h_baseTile, 0, player_sprite_x - 8, player_sprite_y);
+    move_metasprite(player_metasprites[1], player_baseTile, 3, player_sprite_x, player_sprite_y);
+      move_metasprite(arm_h_metasprites[0], arm_h_baseTile, 7, player_sprite_x - 8, player_sprite_y - 2);
+    } else {
+      move_metasprite(arm_h_metasprites[0], arm_h_baseTile, 0, 0, 0);
+      move_metasprite(arm_h_metasprites[0], arm_h_baseTile, 7, 0, 0);
+    }
     hide_sprite(10);
     hide_sprite(11);
-    direction |= DIR_RIGHT;
-    player_x++;
+  }
+  if (direction == DIR_RIGHT) {
+    move_metasprite_vflip(player_metasprites[1], player_baseTile, 3, player_sprite_x, player_sprite_y);
+    if (transform_remaining_counter > 0) {
+      move_metasprite_vflip(arm_h_metasprites[0], arm_h_baseTile, 0, player_sprite_x + 8, player_sprite_y);
+      move_metasprite_vflip(arm_h_metasprites[0], arm_h_baseTile, 7, player_sprite_x + 8, player_sprite_y - 2);
+    } else {
+      move_metasprite_vflip(arm_h_metasprites[0], arm_h_baseTile, 0, 0, 0);
+      move_metasprite_vflip(arm_h_metasprites[0], arm_h_baseTile, 7, 0, 0);
+    }
+    hide_sprite(10);
+    hide_sprite(11);
   }
 
   check_collision();
@@ -335,6 +373,12 @@ void updateGame() {
   set_camera();
 
   counter++;
+  if (transform_remaining_counter > 0) {
+    transform_remaining_counter--;
+  }
+  if (transform_cooldown_counter > 0) {
+    transform_cooldown_counter--;
+  }
 }
 
 void process_events() {
@@ -346,6 +390,10 @@ void process_events() {
       if (counter == 300) {
         show_hint("     HOLD A AND B       TO TRANSFORM    ");
       }
+      if (transform_remaining_counter > 0) {
+        hide_hud();
+        event_state = EVENT_PRISON_CELL;
+      }
       break;
     case EVENT_PRISON_CELL:
       break;
@@ -356,7 +404,6 @@ void process_events() {
       if (counter == 300) {
         hide_hud();
       }
-      break;
       break;
   }
 }
@@ -383,23 +430,23 @@ void hide_hud() {
 }
 
 void check_collision() {
-  uint8_t offset_x = (direction & DIR_RIGHT) ? 13 : 3;
-  uint8_t offset_y = (direction & DIR_DOWN) ? 6 : 2;
+  uint8_t offset_x = (direction_pressed & DIR_RIGHT) ? 13 : 3;
+  uint8_t offset_y = (direction_pressed & DIR_DOWN) ? 6 : 2;
   uint8_t x_tile = ((camera_x + player_x + offset_x) % 255) >> 3u;
   uint8_t y_tile = ((camera_y + player_y + offset_y) % 255) >> 3u;
   uint8_t tile_id = get_bkg_tile_xy(x_tile, y_tile);
   if (tile_id < 2 || (tile_id > 5 && tile_id < 0x0C)) {
     // Collide
-    if (direction & DIR_UP) {
+    if (direction_pressed & DIR_UP) {
       player_y++;
     }
-    if (direction & DIR_DOWN) {
+    if (direction_pressed & DIR_DOWN) {
       player_y--;
     }
-    if (direction & DIR_LEFT) {
+    if (direction_pressed & DIR_LEFT) {
       player_x++;
     }
-    if (direction & DIR_RIGHT) {
+    if (direction_pressed & DIR_RIGHT) {
       player_x--;
     }
   }
