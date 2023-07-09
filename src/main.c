@@ -126,12 +126,15 @@ void main() {
 
 void perLineInterrupt() {
   if (LY_REG == HUD_Y) {
-    LYC_REG = HUD_Y + HINT_HEIGHT;
     SHOW_WIN;
+    if (hud_control & HUD_HINT_MODE) {
+      LYC_REG = HUD_Y + HINT_HEIGHT;
+    }
   }
-  if (hud_control & HUD_HINT_MODE && LY_REG == HUD_Y + HINT_HEIGHT) {
-    LYC_REG = HUD_Y;
+  // Hint Mode end line
+  if (LY_REG == HUD_Y + HINT_HEIGHT) {
     HIDE_WIN;
+    LYC_REG = HUD_Y;
   }
 }
 
