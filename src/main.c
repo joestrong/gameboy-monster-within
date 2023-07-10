@@ -11,6 +11,7 @@
 #include "./tiles/arm_h.h"
 #include "./tiles/arm_v.h"
 #include "./tiles/dialog.h"
+#include "./tiles/soldier.h"
 
 #define skip_intro 1
 
@@ -28,6 +29,7 @@
 #define player_baseTile 0
 #define arm_h_baseTile player_TILE_COUNT
 #define arm_v_baseTile arm_h_baseTile + arm_h_TILE_COUNT
+#define soldier_baseTile arm_v_baseTile + arm_v_TILE_COUNT
 
 #define player_sprite_x_offset 16
 #define player_sprite_y_offset 16
@@ -94,8 +96,10 @@ const UWORD palettes[] = {
     RGB_WHITE, RGB_LIGHTGRAY, RGB_WHITE, RGB_WHITE, // BG Fade-in
     RGB_WHITE, RGB_LIGHTGRAY, RGB_DARKGRAY, RGB_WHITE, // BG Fade-in 2
     RGB_WHITE, RGB_LIGHTGRAY, RGB_DARKGRAY, RGB_BLACK, // BG B&W
-    RGB_WHITE, RGB_BLUE, RGB_DARKBLUE, RGB_BLACK, // Sprite Blue
     RGB_YELLOW, RGB_WHITE, RGB_BLACK, RGB_BLACK, // Dialog
+
+    RGB_WHITE, RGB_BLUE, RGB_DARKBLUE, RGB_BLACK, // Sprite Blue
+    RGB_WHITE, RGB(0x15, 9, 9), RGB(0x10, 0, 0), RGB(5, 0, 0), // Sprite Red (Enemy)
 };
 
 void main() {
@@ -105,8 +109,8 @@ void main() {
 
   // Set pallette defaults
   set_bkg_palette(0, 1, &palettes[0]);
-  set_sprite_palette(0, 1, &palettes[4*4]);
-  set_bkg_palette(1, 1, &palettes[5*4]); // Dialog
+  set_bkg_palette(1, 1, &palettes[4*4]); // Dialog
+  set_sprite_palette(0, 2, &palettes[5*4]); // Sprites
   #if skip_intro == 1
     state = 2;
     loadGame();
@@ -241,9 +245,11 @@ void loadGame() {
   WY_REG = 144;
   SHOW_WIN;
 
+  // Sprites
   set_sprite_data(0x00, player_TILE_COUNT, player_tiles);
   set_sprite_data(arm_h_baseTile, arm_h_TILE_COUNT, arm_h_tiles);
   set_sprite_data(arm_v_baseTile, arm_v_TILE_COUNT, arm_v_tiles);
+  set_sprite_data(soldier_baseTile, soldier_TILE_COUNT, soldier_tiles);
 
   player_sprite_x = player_x + player_sprite_x_offset;
   player_sprite_y = player_y + player_sprite_y_offset;
@@ -393,9 +399,20 @@ void process_events() {
       if (transform_remaining_counter > 0) {
         hide_hud();
         event_state = EVENT_PRISON_CELL;
+        counter = 0;
+      }
+      if (counter > 600) {
+        counter = 500;
       }
       break;
     case EVENT_PRISON_CELL:
+      // Make soldier
+      if (counter == 1) {
+        move_metasprite(soldier_metasprites[0], soldier_baseTile, 12, 16, 32);
+      }
+      if (counter > 600) {
+        counter = 500;
+      }
       break;
     case EVENT_PRISON_CELL_POST_SMASH:
       if (counter == 180) {
@@ -403,6 +420,9 @@ void process_events() {
       }
       if (counter == 300) {
         hide_hud();
+      }
+      if (counter > 600) {
+        counter = 500;
       }
       break;
   }
