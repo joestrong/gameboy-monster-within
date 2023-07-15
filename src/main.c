@@ -63,6 +63,7 @@ void process_events();
 void show_dialog(char* text);
 void show_hint(char* text);
 void hide_hud();
+void check_destruct();
 void check_collision();
 void set_camera();
 
@@ -92,14 +93,30 @@ uint16_t transform_remaining_counter = 0;
 uint16_t transform_cooldown_counter = 0;
 
 const UWORD palettes[] = {
-    RGB_WHITE, RGB_WHITE, RGB_WHITE, RGB_WHITE, // BG Fade-in
-    RGB_WHITE, RGB_LIGHTGRAY, RGB_WHITE, RGB_WHITE, // BG Fade-in
-    RGB_WHITE, RGB_LIGHTGRAY, RGB_DARKGRAY, RGB_WHITE, // BG Fade-in 2
-    RGB_WHITE, RGB_LIGHTGRAY, RGB_DARKGRAY, RGB_BLACK, // BG B&W
-    RGB_YELLOW, RGB_WHITE, RGB_BLACK, RGB_BLACK, // Dialog
+  RGB_WHITE, RGB_WHITE, RGB_WHITE, RGB_WHITE, // BG Fade-in
+  RGB_WHITE, RGB_LIGHTGRAY, RGB_WHITE, RGB_WHITE, // BG Fade-in
+  RGB_WHITE, RGB_LIGHTGRAY, RGB_DARKGRAY, RGB_WHITE, // BG Fade-in 2
+  RGB_WHITE, RGB_LIGHTGRAY, RGB_DARKGRAY, RGB_BLACK, // BG B&W
+  RGB_YELLOW, RGB_WHITE, RGB_BLACK, RGB_BLACK, // Dialog
 
-    RGB_WHITE, RGB_BLUE, RGB_DARKBLUE, RGB_BLACK, // Sprite Blue
-    RGB_WHITE, RGB(0x15, 9, 9), RGB(0x10, 0, 0), RGB(5, 0, 0), // Sprite Red (Enemy)
+  RGB_WHITE, RGB_BLUE, RGB_DARKBLUE, RGB_BLACK, // Sprite Blue
+  RGB_WHITE, RGB(0x15, 9, 9), RGB(0x10, 0, 0), RGB(5, 0, 0), // Sprite Red (Enemy)
+};
+
+const BYTE destruct_map[] = {
+  0x02, // 0x00 Wall
+  0x02, // 0x01 Wall top
+  0x02,
+  0x03,
+  0x04,
+  0x05,
+  0x04, // 0x06 Fence/Gate
+  0x05, // 0x07 Fence/Gate
+  0x04, // 0x08 Fence/Gate
+  0x05, // 0x09 Fence/Gate
+  0x02, // 0x0A Fence/Gate
+  0x03, // 0x0B Fence/Gate
+  0x02, // 0x0C Fence/Gate
 };
 
 void main() {
@@ -357,6 +374,10 @@ void updateGame() {
 
   check_collision();
 
+  if (keys & J_B && transform_remaining_counter > 0) {
+    check_destruct();
+  }
+
   // Camera updates
 
   if (player_x < 72 && camera_x > 0) {
@@ -469,6 +490,42 @@ void check_collision() {
     if (direction_pressed & DIR_RIGHT) {
       player_x--;
     }
+  }
+}
+
+void check_destruct() {
+  uint8_t player_x_tile = (player_x + camera_x) >> 3;
+  uint8_t player_y_tile = (player_y + camera_y) >> 3;
+  player_x_tile++;
+  switch (direction) {
+    case DIR_UP:
+      break;
+    case DIR_DOWN:
+      player_y_tile++;
+      break;
+    case DIR_LEFT:
+      player_x_tile--;
+      break;
+    case DIR_RIGHT:
+      player_x_tile++;
+      break;
+  }
+
+  // TODO: Depending where on tile we're standing, also break tile to side so we get through
+  // TODO: Allow multiple hits on certain types of blocks before destruction?
+
+  // Destruct tile, and loop up through all higher tiles (for tall walls)
+  while (player_y_tile > 0) {
+    uint8_t tile = get_bkg_tile_xy(player_x_tile, player_y_tile);
+    // TODO: Use destruct tilemap to map tilemaps, rather than mapping tiles
+    uint8_t new_tile = destruct_map[tile];
+    if (tile == new_tile) {
+      break; // No tile destroyed, so don't scan up further
+    }
+    set_bkg_tile_xy(player_x_tile, player_y_tile, new_tile);
+    // TODO: Use a tilemap that stores how many tiles to destroy up? Heightmap?
+    // Check next tile up
+    player_y_tile--;
   }
 }
 
