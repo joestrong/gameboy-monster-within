@@ -34,6 +34,8 @@
 #define player_sprite_x_offset 16
 #define player_sprite_y_offset 16
 
+#define OAM_ENEMY_START 12
+
 #define DIR_UP 1
 #define DIR_RIGHT 2
 #define DIR_DOWN 4
@@ -42,6 +44,7 @@
 #define EVENT_PRISON_CELL_START 0
 #define EVENT_PRISON_CELL 1
 #define EVENT_PRISON_CELL_POST_SMASH 2
+#define EVENT_PRISON_CELL_AFTER_BATTLE 3
 
 #define HUD_Y 104
 #define HINT_HEIGHT 16
@@ -63,6 +66,7 @@ void process_events();
 void show_dialog(char* text);
 void show_hint(char* text);
 void hide_hud();
+void update_enemies();
 void check_destruct();
 void check_collision();
 void set_camera();
@@ -118,6 +122,20 @@ const BYTE destruct_map[] = {
   0x03, // 0x0B Fence/Gate
   0x02, // 0x0C Fence/Gate
 };
+
+struct enemy {
+    uint8_t x;
+    uint8_t y;
+    uint8_t direction;
+    uint8_t oam_id;
+    uint8_t flags;
+    uint8_t state;
+};
+#define ENEMY_SHOW 1
+#define ENEMY_STATE_STOPPED 0
+#define ENEMY_STATE_PATROL 1
+
+struct enemy enemy1 = {32, 32, DIR_RIGHT, OAM_ENEMY_START, .flags = 0, ENEMY_STATE_STOPPED};
 
 void main() {
   DISPLAY_OFF;
@@ -372,6 +390,8 @@ void updateGame() {
     hide_sprite(11);
   }
 
+  update_enemies();
+
   check_collision();
 
   if (keys & J_B && transform_remaining_counter > 0) {
@@ -411,6 +431,8 @@ void updateGame() {
 void process_events() {
   switch (event_state) {
     case EVENT_PRISON_CELL_START:
+      enemy1.flags |= ENEMY_SHOW;
+      enemy1.state |= ENEMY_STATE_PATROL;
       if (counter == 180) {
         show_dialog("WHO AM I");
       }
@@ -427,15 +449,15 @@ void process_events() {
       }
       break;
     case EVENT_PRISON_CELL:
-      // Make soldier
-      if (counter == 1) {
-        move_metasprite(soldier_metasprites[0], soldier_baseTile, 12, 16, 32);
-      }
+      // TODO: Press B to punch
       if (counter > 600) {
         counter = 500;
       }
       break;
     case EVENT_PRISON_CELL_POST_SMASH:
+      // TODO: Make soldier attack?
+      break;
+    case EVENT_PRISON_CELL_AFTER_BATTLE:
       if (counter == 180) {
         show_dialog("WHAT AM I");
       }
@@ -468,6 +490,52 @@ void show_hint(char* text) {
 void hide_hud() {
   WX_REG = 167;
   WY_REG = 144;
+}
+
+void update_enemies() {
+  if (enemy1.flags & ENEMY_SHOW > 0) {
+    switch (enemy1.state) {
+      case ENEMY_STATE_STOPPED:
+        break;
+      case ENEMY_STATE_PATROL:
+        switch (enemy1.direction) {
+          case DIR_RIGHT:
+            if (enemy1.x > 200) {
+              enemy1.direction = DIR_LEFT;
+            } else {
+              enemy1.x++;
+            }
+            break;
+          case DIR_LEFT:
+            if (enemy1.x < 16) {
+              enemy1.direction = DIR_RIGHT;
+            } else {
+              enemy1.x--;
+            }
+            break;
+          case DIR_DOWN:
+            enemy1.y++;
+            break;
+          case DIR_UP:
+            enemy1.y--;
+            break;
+        }
+        break;
+    }
+    // Animate
+    switch (enemy1.direction) {
+      case DIR_RIGHT:
+      case DIR_UP:
+      case DIR_DOWN:
+        move_metasprite(soldier_metasprites[0], soldier_baseTile, enemy1.oam_id, enemy1.x - camera_x, enemy1.y - camera_y);
+        break;
+      case DIR_LEFT:
+        move_metasprite_vflip(soldier_metasprites[0], soldier_baseTile, enemy1.oam_id, enemy1.x - camera_x, enemy1.y - camera_y);
+        break;
+    }
+  } else {
+    hide_sprite(enemy1.oam_id);
+  }
 }
 
 void check_collision() {
