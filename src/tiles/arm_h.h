@@ -11,7 +11,7 @@
 #define arm_h_TILE_H 16
 #define arm_h_WIDTH 24
 #define arm_h_HEIGHT 16
-#define arm_h_TILE_COUNT 6
+#define arm_h_TILE_COUNT 18
 #define arm_h_PALETTE_COUNT 1
 #define arm_h_COLORS_PER_PALETTE 4
 #define arm_h_TOTAL_COLORS 4
@@ -23,8 +23,8 @@
 BANKREF_EXTERN(arm_h)
 
 extern const palette_color_t arm_h_palettes[4];
-extern const uint8_t arm_h_tiles[96];
+extern const uint8_t arm_h_tiles[288];
 
-extern const metasprite_t* const arm_h_metasprites[1];
+extern const metasprite_t* const arm_h_metasprites[3];
 
 #endif

@@ -96,6 +96,9 @@ uint8_t direction_pressed = 0;
 uint16_t transform_remaining_counter = 0;
 uint16_t transform_cooldown_counter = 0;
 
+uint8_t punch_counter = 0;
+uint8_t punch_frame = 0; // 0, 1, 2
+
 const UWORD palettes[] = {
   RGB_WHITE, RGB_WHITE, RGB_WHITE, RGB_WHITE, // BG Fade-in
   RGB_WHITE, RGB_LIGHTGRAY, RGB_WHITE, RGB_WHITE, // BG Fade-in
@@ -345,11 +348,25 @@ void updateGame() {
     player_x++;
   }
 
+  // Transform
   if (keys & J_A && keys & J_B && transform_remaining_counter == 0) {
     transform_remaining_counter = TRANSFORM_LENGTH;
   }
 
+  // Punch
+  if (keys & J_B && transform_remaining_counter > 0 && punch_counter == 0) {
+    punch_counter = 10;
+  }
+
   // Animations
+
+  if (punch_counter == 0) {
+    punch_frame = 0;
+  } else if (punch_counter > 3) {
+    punch_frame = 2;
+  } else if (punch_counter > 0) {
+    punch_frame = 1;
+  }
 
   if (direction == DIR_UP || direction == DIR_DOWN) {
     move_metasprite(player_metasprites[0], player_baseTile, 0, player_sprite_x, player_sprite_y);
@@ -364,12 +381,8 @@ void updateGame() {
   if (direction == DIR_LEFT) {
     move_metasprite(player_metasprites[1], player_baseTile, 3, player_sprite_x, player_sprite_y);
     if (transform_remaining_counter > 0) {
-    move_metasprite(arm_h_metasprites[0], arm_h_baseTile, 0, player_sprite_x - 8, player_sprite_y);
-    move_metasprite(arm_h_metasprites[0], arm_h_baseTile, 0, player_sprite_x - 8, player_sprite_y);
-    move_metasprite(player_metasprites[1], player_baseTile, 3, player_sprite_x, player_sprite_y);
-      move_metasprite(arm_h_metasprites[0], arm_h_baseTile, 0, player_sprite_x - 8, player_sprite_y);
-    move_metasprite(player_metasprites[1], player_baseTile, 3, player_sprite_x, player_sprite_y);
-      move_metasprite(arm_h_metasprites[0], arm_h_baseTile, 7, player_sprite_x - 8, player_sprite_y - 2);
+      move_metasprite(arm_h_metasprites[punch_frame], arm_h_baseTile, 0, player_sprite_x - 8, player_sprite_y);
+      move_metasprite(arm_h_metasprites[punch_frame], arm_h_baseTile, 7, player_sprite_x - 8, player_sprite_y - 2);
     } else {
       move_metasprite(arm_h_metasprites[0], arm_h_baseTile, 0, 0, 0);
       move_metasprite(arm_h_metasprites[0], arm_h_baseTile, 7, 0, 0);
@@ -380,8 +393,8 @@ void updateGame() {
   if (direction == DIR_RIGHT) {
     move_metasprite_vflip(player_metasprites[1], player_baseTile, 3, player_sprite_x, player_sprite_y);
     if (transform_remaining_counter > 0) {
-      move_metasprite_vflip(arm_h_metasprites[0], arm_h_baseTile, 0, player_sprite_x + 8, player_sprite_y);
-      move_metasprite_vflip(arm_h_metasprites[0], arm_h_baseTile, 7, player_sprite_x + 8, player_sprite_y - 2);
+      move_metasprite_vflip(arm_h_metasprites[punch_frame], arm_h_baseTile, 0, player_sprite_x + 8, player_sprite_y);
+      move_metasprite_vflip(arm_h_metasprites[punch_frame], arm_h_baseTile, 7, player_sprite_x + 8, player_sprite_y - 2);
     } else {
       move_metasprite_vflip(arm_h_metasprites[0], arm_h_baseTile, 0, 0, 0);
       move_metasprite_vflip(arm_h_metasprites[0], arm_h_baseTile, 7, 0, 0);
@@ -425,6 +438,9 @@ void updateGame() {
   }
   if (transform_cooldown_counter > 0) {
     transform_cooldown_counter--;
+  }
+  if (punch_counter > 0) {
+    punch_counter--;
   }
 }
 
