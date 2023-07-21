@@ -361,7 +361,7 @@ void updateGame() {
 
   // Punch
   if (keys & J_B && transform_remaining_counter > 0 && punch_counter == 0) {
-    punch_counter = 10;
+    punch_counter = 25;
     if (active_arm == ARM_LEFT) {
       active_arm = ARM_RIGHT;
       punch_frame = &right_punch_frame;
@@ -373,11 +373,11 @@ void updateGame() {
 
   // Animations
 
-  if (punch_counter == 0) {
+  if (punch_counter <= 10) {
     *punch_frame = 0;
-  } else if (punch_counter > 3) {
+  } else if (punch_counter > 13) {
     *punch_frame = 2;
-  } else if (punch_counter > 0) {
+  } else if (punch_counter > 10) {
     *punch_frame = 1;
   }
 
