@@ -390,8 +390,8 @@ void updateGame() {
   if (direction == DIR_UP || direction == DIR_DOWN) {
     move_metasprite(player_metasprites[0], player_baseTile, 0, player_sprite_x, player_sprite_y);
     if (transform_remaining_counter > 0) {
-      move_metasprite(arm_v_metasprites[0], arm_v_baseTile, 4, player_sprite_x - 8, player_sprite_y + 8);
-      move_metasprite_vflip(arm_v_metasprites[0], arm_v_baseTile, 8, player_sprite_x + 8, player_sprite_y + 8);
+      move_metasprite(arm_v_metasprites[left_punch_frame], arm_v_baseTile, 4, player_sprite_x - 8, player_sprite_y + 8);
+      move_metasprite_vflip(arm_v_metasprites[right_punch_frame], arm_v_baseTile, 8, player_sprite_x + 8, player_sprite_y + 8);
     } else {
       move_metasprite(arm_v_metasprites[0], arm_v_baseTile, 4, 0, 0);
       move_metasprite_vflip(arm_v_metasprites[0], arm_v_baseTile, 8, 0, 0);
@@ -625,10 +625,16 @@ void check_attack_collision() {
       break;
   }
 
-  uint16_t enemy_box_x = enemy1.x - 4;
-  uint16_t enemy_box_x_2 = enemy1.x + 4;
-  uint16_t enemy_box_y = enemy1.y - 4;
-  uint16_t enemy_box_y_2 = enemy1.y + 4;
+  uint16_t enemy_box_x = enemy1.x - 4 - camera_x;
+  uint16_t enemy_box_x_2 = enemy1.x + 4 - camera_x;
+  uint16_t enemy_box_y = enemy1.y - 4 - camera_y;
+  uint16_t enemy_box_y_2 = enemy1.y + 4 - camera_y;
+
+  // Debug
+  // set_sprite_tile(17, 0x20);
+  // set_sprite_tile(18, 0x20);
+  // move_sprite(17, punch_box_x + 8, punch_box_y + 16);
+  // move_sprite(18, enemy_box_x + 8, enemy_box_y + 16);
 
   if (
     punch_box_x < enemy_box_x_2 && 
