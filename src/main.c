@@ -31,8 +31,8 @@
 #define arm_v_baseTile arm_h_baseTile + arm_h_TILE_COUNT
 #define soldier_baseTile arm_v_baseTile + arm_v_TILE_COUNT
 
-#define player_sprite_x_offset 16
-#define player_sprite_y_offset 16
+#define player_sprite_x_offset 8
+#define player_sprite_y_offset 12
 
 #define OAM_ENEMY_START 12
 
@@ -68,7 +68,8 @@ void show_hint(char* text);
 void hide_hud();
 void update_enemies();
 void check_destruct();
-void check_collision();
+void check_bkg_collision();
+void check_attack_collision();
 void set_camera();
 
 uint8_t state = 0; // 0 - Compo Logo 1 - Title, 2 - Game
@@ -104,6 +105,9 @@ uint8_t left_punch_frame = 0; // 0, 1, 2
 uint8_t right_punch_frame = 0; // 0, 1, 2
 uint8_t active_arm = ARM_LEFT;
 uint8_t* punch_frame = &left_punch_frame;
+uint8_t attack_flags = 0;
+
+#define ATTACKING_PUNCH 1
 
 const UWORD palettes[] = {
   RGB_WHITE, RGB_WHITE, RGB_WHITE, RGB_WHITE, // BG Fade-in
@@ -377,7 +381,9 @@ void updateGame() {
     *punch_frame = 0;
   } else if (punch_counter > 13) {
     *punch_frame = 2;
+    attack_flags |= ATTACKING_PUNCH;
   } else if (punch_counter > 10) {
+    attack_flags &= ~ATTACKING_PUNCH;
     *punch_frame = 1;
   }
 
@@ -418,9 +424,10 @@ void updateGame() {
 
   update_enemies();
 
-  check_collision();
+  check_bkg_collision();
+  check_attack_collision();
 
-  if (keys & J_B && transform_remaining_counter > 0) {
+  if ((attack_flags & ATTACKING_PUNCH) && transform_remaining_counter > 0) {
     check_destruct();
   }
 
@@ -556,18 +563,18 @@ void update_enemies() {
       case DIR_RIGHT:
       case DIR_UP:
       case DIR_DOWN:
-        move_metasprite(soldier_metasprites[0], soldier_baseTile, enemy1.oam_id, enemy1.x - camera_x, enemy1.y - camera_y);
+        move_metasprite(soldier_metasprites[0], soldier_baseTile, enemy1.oam_id, enemy1.x - camera_x + player_sprite_x_offset, enemy1.y - camera_y + player_sprite_y_offset);
         break;
       case DIR_LEFT:
-        move_metasprite_vflip(soldier_metasprites[0], soldier_baseTile, enemy1.oam_id, enemy1.x - camera_x, enemy1.y - camera_y);
+        move_metasprite_vflip(soldier_metasprites[0], soldier_baseTile, enemy1.oam_id, enemy1.x - camera_x + player_sprite_x_offset, enemy1.y - camera_y + player_sprite_y_offset);
         break;
     }
   } else {
-    hide_sprite(enemy1.oam_id);
+    move_metasprite(soldier_metasprites[0], soldier_baseTile, enemy1.oam_id, 0, 0);
   }
 }
 
-void check_collision() {
+void check_bkg_collision() {
   uint8_t offset_x = (direction_pressed & DIR_RIGHT) ? 13 : 3;
   uint8_t offset_y = (direction_pressed & DIR_DOWN) ? 6 : 2;
   uint8_t x_tile = ((camera_x + player_x + offset_x) % 255) >> 3u;
@@ -587,6 +594,50 @@ void check_collision() {
     if (direction_pressed & DIR_RIGHT) {
       player_x--;
     }
+  }
+}
+
+void check_attack_collision() {
+  if ((attack_flags & ATTACKING_PUNCH) == 0) {
+    return;
+  }
+
+  uint16_t punch_box_x = player_x - 8;
+  uint16_t punch_box_x_2 = player_x + 8;
+  uint16_t punch_box_y = player_y - 8;
+  uint16_t punch_box_y_2 = player_y + 8;
+  switch (direction) {
+    case DIR_UP:
+      punch_box_y -= 10;
+      punch_box_y_2 -= 10;
+      break;
+    case DIR_DOWN:
+      punch_box_y += 10;
+      punch_box_y_2 += 10;
+      break;
+    case DIR_LEFT:
+      punch_box_x -= 12;
+      punch_box_x_2 -= 12;
+      break;
+    case DIR_RIGHT:
+      punch_box_x += 12;
+      punch_box_x_2 += 12;
+      break;
+  }
+
+  uint16_t enemy_box_x = enemy1.x - 4;
+  uint16_t enemy_box_x_2 = enemy1.x + 4;
+  uint16_t enemy_box_y = enemy1.y - 4;
+  uint16_t enemy_box_y_2 = enemy1.y + 4;
+
+  if (
+    punch_box_x < enemy_box_x_2 && 
+    punch_box_x_2 > enemy_box_x &&
+    punch_box_y < enemy_box_y_2 &&
+    punch_box_y_2 > enemy_box_y
+  ) {
+    // Overlap
+    enemy1.flags &= ~ENEMY_SHOW;
   }
 }
 
