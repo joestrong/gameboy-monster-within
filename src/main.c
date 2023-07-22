@@ -643,7 +643,20 @@ void check_attack_collision() {
     punch_box_y_2 > enemy_box_y
   ) {
     // Overlap
-    enemy1.flags &= ~ENEMY_SHOW;
+    switch (direction) {
+    case DIR_UP:
+      enemy1.y -= 5;
+      break;
+    case DIR_DOWN:
+      enemy1.y += 5;
+      break;
+    case DIR_LEFT:
+      enemy1.x -= 5;
+      break;
+    case DIR_RIGHT:
+      enemy1.x += 5;
+      break;
+    }
   }
 }
 
