@@ -10,6 +10,7 @@
 #include "./tiles/player.h"
 #include "./tiles/arm_h.h"
 #include "./tiles/arm_v.h"
+#include "./tiles/arm_v_back.h"
 #include "./tiles/dialog.h"
 #include "./tiles/soldier.h"
 
@@ -29,7 +30,8 @@
 #define player_baseTile 0
 #define arm_h_baseTile player_TILE_COUNT
 #define arm_v_baseTile arm_h_baseTile + arm_h_TILE_COUNT
-#define soldier_baseTile arm_v_baseTile + arm_v_TILE_COUNT
+#define arm_v_back_baseTile arm_v_baseTile + arm_v_TILE_COUNT
+#define soldier_baseTile arm_v_back_baseTile + arm_v_back_TILE_COUNT
 
 #define player_sprite_x_offset 8
 #define player_sprite_y_offset 12
@@ -297,6 +299,7 @@ void loadGame() {
   set_sprite_data(0x00, player_TILE_COUNT, player_tiles);
   set_sprite_data(arm_h_baseTile, arm_h_TILE_COUNT, arm_h_tiles);
   set_sprite_data(arm_v_baseTile, arm_v_TILE_COUNT, arm_v_tiles);
+  set_sprite_data(arm_v_back_baseTile, arm_v_back_TILE_COUNT, arm_v_back_tiles);
   set_sprite_data(soldier_baseTile, soldier_TILE_COUNT, soldier_tiles);
 
   player_sprite_x = player_x + player_sprite_x_offset;
@@ -387,14 +390,24 @@ void updateGame() {
     *punch_frame = 1;
   }
 
-  if (direction == DIR_UP || direction == DIR_DOWN) {
+  if (direction == DIR_DOWN) {
     move_metasprite(player_metasprites[0], player_baseTile, 0, player_sprite_x, player_sprite_y);
     if (transform_remaining_counter > 0) {
-      move_metasprite(arm_v_metasprites[left_punch_frame], arm_v_baseTile, 4, player_sprite_x - 8, player_sprite_y + 8);
-      move_metasprite_vflip(arm_v_metasprites[right_punch_frame], arm_v_baseTile, 8, player_sprite_x + 8, player_sprite_y + 8);
+      move_metasprite(arm_v_metasprites[right_punch_frame], arm_v_baseTile, 4, player_sprite_x - 8, player_sprite_y + 8);
+      move_metasprite_vflip(arm_v_metasprites[left_punch_frame], arm_v_baseTile, 8, player_sprite_x + 8, player_sprite_y + 8);
     } else {
       move_metasprite(arm_v_metasprites[0], arm_v_baseTile, 4, 0, 0);
       move_metasprite_vflip(arm_v_metasprites[0], arm_v_baseTile, 8, 0, 0);
+    }
+  }
+  if (direction == DIR_UP) {
+    move_metasprite(player_metasprites[0], player_baseTile, 0, player_sprite_x, player_sprite_y);
+    if (transform_remaining_counter > 0) {
+      move_metasprite(arm_v_metasprites[left_punch_frame], arm_v_back_baseTile, 4, player_sprite_x - 8, player_sprite_y + 8 - 22);
+      move_metasprite_vflip(arm_v_metasprites[right_punch_frame], arm_v_back_baseTile, 8, player_sprite_x + 8, player_sprite_y + 8 - 22);
+    } else {
+      move_metasprite(arm_v_metasprites[0], arm_v_back_baseTile, 4, 0, 0);
+      move_metasprite_vflip(arm_v_metasprites[0], arm_v_back_baseTile, 8, 0, 0);
     }
   }
   if (direction == DIR_LEFT) {
@@ -644,18 +657,18 @@ void check_attack_collision() {
   ) {
     // Overlap
     switch (direction) {
-    case DIR_UP:
-      enemy1.y -= 5;
-      break;
-    case DIR_DOWN:
-      enemy1.y += 5;
-      break;
-    case DIR_LEFT:
-      enemy1.x -= 5;
-      break;
-    case DIR_RIGHT:
-      enemy1.x += 5;
-      break;
+      case DIR_UP:
+        enemy1.y -= 5;
+        break;
+      case DIR_DOWN:
+        enemy1.y += 5;
+        break;
+      case DIR_LEFT:
+        enemy1.x -= 5;
+        break;
+      case DIR_RIGHT:
+        enemy1.x += 5;
+        break;
     }
   }
 }

@@ -13,6 +13,7 @@ main: src/main.c
 		src/tiles/player.c \
 		src/tiles/arm_h.c \
 		src/tiles/arm_v.c \
+		src/tiles/arm_v_back.c \
 		src/tiles/dialog.c \
 		src/tiles/soldier.c
 
@@ -23,6 +24,7 @@ gfx: gfx/*.png
 	png2asset gfx/player.png -c src/tiles/player.c -spr8x16 -sw 16 -sh 32
 	png2asset gfx/arm_h.png -c src/tiles/arm_h.c -spr8x16 -sw 24 -sh 16
 	png2asset gfx/arm_v.png -c src/tiles/arm_v.c -spr8x16 -sw 16 -sh 32
+	png2asset gfx/arm_v_back.png -c src/tiles/arm_v_back.c -spr8x16 -sw 16 -sh 32
 	png2asset gfx/dialog.png -c src/tiles/dialog.c -map -use_map_attributes -sp 0x01
 	png2asset gfx/soldier.png -c src/tiles/soldier.c -spr8x16 -sw 16 -sh 32 -sp 0x01
 
