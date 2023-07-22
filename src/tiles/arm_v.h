@@ -11,7 +11,7 @@
 #define arm_v_TILE_H 16
 #define arm_v_WIDTH 16
 #define arm_v_HEIGHT 32
-#define arm_v_TILE_COUNT 22
+#define arm_v_TILE_COUNT 24
 #define arm_v_PALETTE_COUNT 1
 #define arm_v_COLORS_PER_PALETTE 4
 #define arm_v_TOTAL_COLORS 4
@@ -23,7 +23,7 @@
 BANKREF_EXTERN(arm_v)
 
 extern const palette_color_t arm_v_palettes[4];
-extern const uint8_t arm_v_tiles[352];
+extern const uint8_t arm_v_tiles[384];
 
 extern const metasprite_t* const arm_v_metasprites[3];
 
