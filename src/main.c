@@ -32,6 +32,9 @@
 #define arm_v_baseTile arm_h_baseTile + arm_h_TILE_COUNT
 #define arm_v_back_baseTile arm_v_baseTile + arm_v_TILE_COUNT
 #define soldier_baseTile arm_v_back_baseTile + arm_v_back_TILE_COUNT
+#define debug_baseTile soldier_baseTile + soldier_TILE_COUNT
+
+#define debug_TILE_COUNT 1
 
 #define player_sprite_x_offset 8
 #define player_sprite_y_offset 12
@@ -70,6 +73,7 @@ void show_hint(char* text);
 void hide_hud();
 void update_enemies();
 void check_destruct();
+void destroy_tile(uint8_t tile_x, uint8_t tile_y);
 void check_bkg_collision();
 void check_attack_collision();
 void set_camera();
@@ -136,6 +140,17 @@ const BYTE destruct_map[] = {
   0x02, // 0x0A Fence/Gate
   0x03, // 0x0B Fence/Gate
   0x02, // 0x0C Fence/Gate
+};
+
+const BYTE debug_tiles[16] = {
+  0x18, 0x18,
+  0x18, 0x18,
+  0x18, 0x18,
+  0xFF, 0xFF,
+  0xFF, 0xFF,
+  0x18, 0x18,
+  0x18, 0x18,
+  0x18, 0x18,
 };
 
 struct enemy {
@@ -301,6 +316,7 @@ void loadGame() {
   set_sprite_data(arm_v_baseTile, arm_v_TILE_COUNT, arm_v_tiles);
   set_sprite_data(arm_v_back_baseTile, arm_v_back_TILE_COUNT, arm_v_back_tiles);
   set_sprite_data(soldier_baseTile, soldier_TILE_COUNT, soldier_tiles);
+  set_sprite_data(debug_baseTile, debug_TILE_COUNT, debug_tiles);
 
   player_sprite_x = player_x + player_sprite_x_offset;
   player_sprite_y = player_y + player_sprite_y_offset;
@@ -674,38 +690,65 @@ void check_attack_collision() {
 }
 
 void check_destruct() {
-  uint8_t player_x_tile = (player_x + camera_x) >> 3;
-  uint8_t player_y_tile = (player_y + camera_y) >> 3;
-  player_x_tile++;
+  uint16_t hit_x_1 = player_x;
+  uint16_t hit_x_2 = player_x;
+  uint16_t hit_y_1 = player_y;
+  uint16_t hit_y_2 = player_y;
   switch (direction) {
     case DIR_UP:
+      hit_y_1 = hit_y_2 -= 8;
+      hit_x_1 -= 4;
+      hit_x_2 += 4;
       break;
     case DIR_DOWN:
-      player_y_tile++;
+      hit_y_1 = hit_y_2 += 8;
+      hit_x_1 -= 4;
+      hit_x_2 += 4;
       break;
     case DIR_LEFT:
-      player_x_tile--;
+      hit_x_1 = hit_x_2 -= 8;
+      hit_y_1 -= 4;
+      hit_y_2 += 4;
       break;
     case DIR_RIGHT:
-      player_x_tile++;
+      hit_x_1 = hit_x_2 += 8;
+      hit_y_1 -= 4;
+      hit_y_2 += 4;
       break;
   }
 
-  // TODO: Depending where on tile we're standing, also break tile to side so we get through
   // TODO: Allow multiple hits on certain types of blocks before destruction?
 
+  // Debug
+  // set_sprite_tile(17, debug_baseTile);
+  // set_sprite_tile(18, debug_baseTile);
+  // move_sprite(17, hit_x_1 - 4 + 8, hit_y_1 - 4 + 16);
+  // move_sprite(18, hit_x_2 - 4 + 8, hit_y_2 - 4 + 16);
+
+  hit_x_1 += camera_x;
+  hit_x_2 += camera_x;
+  hit_y_1 += camera_y;
+  hit_y_2 += camera_y;
+
+  destroy_tile((hit_x_1 >> 3), (hit_y_1 >> 3));
+  destroy_tile((hit_x_2 >> 3), (hit_y_2 >> 3));
+}
+
+void destroy_tile(uint8_t tile_x, uint8_t tile_y) {
   // Destruct tile, and loop up through all higher tiles (for tall walls)
-  while (player_y_tile > 0) {
-    uint8_t tile = get_bkg_tile_xy(player_x_tile, player_y_tile);
+  uint8_t count = 0;
+  while (tile_y > 0 && count < 3) {
+    uint8_t tile = get_bkg_tile_xy(tile_x, tile_y);
     // TODO: Use destruct tilemap to map tilemaps, rather than mapping tiles
     uint8_t new_tile = destruct_map[tile];
     if (tile == new_tile) {
       break; // No tile destroyed, so don't scan up further
     }
-    set_bkg_tile_xy(player_x_tile, player_y_tile, new_tile);
+    set_bkg_tile_xy(tile_x, tile_y, new_tile);
     // TODO: Use a tilemap that stores how many tiles to destroy up? Heightmap?
     // Check next tile up
-    player_y_tile--;
+    tile_y--;
+    count++;
   }
 }
 
