@@ -626,7 +626,7 @@ void check_bkg_collision() {
   uint8_t x_tile = ((camera_x + player_x + offset_x) % 255) >> 3u;
   uint8_t y_tile = ((camera_y + player_y + offset_y) % 255) >> 3u;
   uint8_t tile_id = get_bkg_tile_xy(x_tile, y_tile);
-  if (tile_id < 2 || (tile_id > 5 && tile_id < 0x0C)) {
+  if (tile_id <= 1 || (tile_id >= 6 && tile_id <= 0x0C)) {
     // Collide
     if (direction_pressed & DIR_UP) {
       player_y++;
