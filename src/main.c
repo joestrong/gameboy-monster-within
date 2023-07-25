@@ -604,8 +604,25 @@ void update_enemies() {
 }
 
 void check_bkg_collision() {
-  uint8_t offset_x = (direction_pressed & DIR_RIGHT) ? 13 : 3;
-  uint8_t offset_y = (direction_pressed & DIR_DOWN) ? 6 : 2;
+  int8_t offset_x = 0;
+  int8_t offset_y = 0;
+  if (direction_pressed == DIR_LEFT) {
+    offset_x = -4;
+  }
+  if (direction_pressed == DIR_RIGHT) {
+    offset_x = 4;
+  }
+  if (direction_pressed == DIR_UP) {
+    offset_y = -2;
+  }
+  if (direction_pressed == DIR_DOWN) {
+    offset_y = 3;
+  }
+
+  // Debug
+  // set_sprite_tile(17, debug_baseTile);
+  // move_sprite(17, player_x + offset_x - 4 + 8, player_y + offset_y - 4 + 16);
+
   uint8_t x_tile = ((camera_x + player_x + offset_x) % 255) >> 3u;
   uint8_t y_tile = ((camera_y + player_y + offset_y) % 255) >> 3u;
   uint8_t tile_id = get_bkg_tile_xy(x_tile, y_tile);
