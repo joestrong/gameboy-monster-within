@@ -36,7 +36,7 @@
 #define arm_v_back_baseTile arm_v_baseTile + arm_v_TILE_COUNT
 #define soldier_baseTile arm_v_back_baseTile + arm_v_back_TILE_COUNT
 #define debug_baseTile soldier_baseTile + soldier_TILE_COUNT
-#define projectile_baseTile debug_baseTile + debug_TILE_COUNT
+#define projectile_baseTile debug_baseTile + debug_TILE_COUNT + 1
 
 #define player_sprite_x_offset 8
 #define player_sprite_y_offset 12
