@@ -27,19 +27,23 @@
 #define font_baseTile overworld_TILE_COUNT
 #define dialog_baseTile font_baseTile + font_TILE_COUNT
 
+#define debug_TILE_COUNT 1
+#define projectile_TILE_COUNT 1
+
 #define player_baseTile 0
 #define arm_h_baseTile player_TILE_COUNT
 #define arm_v_baseTile arm_h_baseTile + arm_h_TILE_COUNT
 #define arm_v_back_baseTile arm_v_baseTile + arm_v_TILE_COUNT
 #define soldier_baseTile arm_v_back_baseTile + arm_v_back_TILE_COUNT
 #define debug_baseTile soldier_baseTile + soldier_TILE_COUNT
-
-#define debug_TILE_COUNT 1
+#define projectile_baseTile debug_baseTile + debug_TILE_COUNT
 
 #define player_sprite_x_offset 8
 #define player_sprite_y_offset 12
 
 #define OAM_ENEMY_START 12
+#define OAM_PROJECTILE 16
+#define OAM_DEBUG 39
 
 #define DIR_UP 1
 #define DIR_RIGHT 2
@@ -72,10 +76,12 @@ void show_dialog(char* text);
 void show_hint(char* text);
 void hide_hud();
 void update_enemies();
+void update_projectiles();
 void check_destruct();
 void destroy_tile(uint8_t tile_x, uint8_t tile_y);
 void check_bkg_collision();
 void check_attack_collision();
+void check_projectile_collision();
 void set_camera();
 
 uint8_t state = 0; // 0 - Compo Logo 1 - Title, 2 - Game
@@ -153,6 +159,17 @@ const BYTE debug_tiles[16] = {
   0x18, 0x18,
 };
 
+const BYTE projectile_tiles[16] = {
+  0xC0, 0xC0,
+  0xC0, 0xC0,
+  0x00, 0x00,
+  0x00, 0x00,
+  0x00, 0x00,
+  0x00, 0x00,
+  0x00, 0x00,
+  0x00, 0x00,
+};
+
 struct enemy {
     uint8_t x;
     uint8_t y;
@@ -160,12 +177,39 @@ struct enemy {
     uint8_t oam_id;
     uint8_t flags;
     uint8_t state;
+    uint8_t shoot_cooldown;
 };
 #define ENEMY_SHOW 1
 #define ENEMY_STATE_STOPPED 0
 #define ENEMY_STATE_PATROL 1
+#define ENEMY_STATE_ATTACKING 2
 
-struct enemy enemy1 = {32, 32, DIR_RIGHT, OAM_ENEMY_START, .flags = 0, ENEMY_STATE_STOPPED};
+struct enemy enemy1 = {
+  .x = 32,
+  .y = 32,
+  .direction = DIR_RIGHT,
+  .oam_id = OAM_ENEMY_START,
+  .flags = 0,
+  .state = ENEMY_STATE_STOPPED,
+  .shoot_cooldown = 0,
+};
+
+struct projectile {
+  uint8_t x;
+  uint8_t y;
+  uint8_t flags;
+  int8_t dx;
+  int8_t dy;
+};
+#define PROJECTILE_SHOW 1
+
+struct projectile projectile = {
+  .x = 0,
+  .y = 0,
+  .flags = 0,
+  .dx = 0,
+  .dy = 0,
+};
 
 void main() {
   DISPLAY_OFF;
@@ -317,6 +361,7 @@ void loadGame() {
   set_sprite_data(arm_v_back_baseTile, arm_v_back_TILE_COUNT, arm_v_back_tiles);
   set_sprite_data(soldier_baseTile, soldier_TILE_COUNT, soldier_tiles);
   set_sprite_data(debug_baseTile, debug_TILE_COUNT, debug_tiles);
+  set_sprite_data(projectile_baseTile, projectile_TILE_COUNT, projectile_tiles);
 
   player_sprite_x = player_x + player_sprite_x_offset;
   player_sprite_y = player_y + player_sprite_y_offset;
@@ -452,9 +497,11 @@ void updateGame() {
   }
 
   update_enemies();
+  update_projectiles();
 
   check_bkg_collision();
   check_attack_collision();
+  check_projectile_collision();
 
   if ((attack_flags & ATTACKING_PUNCH) && transform_remaining_counter > 0) {
     check_destruct();
@@ -515,6 +562,7 @@ void process_events() {
       break;
     case EVENT_PRISON_CELL:
       // TODO: Press B to punch
+      enemy1.state = ENEMY_STATE_ATTACKING;
       if (counter > 600) {
         counter = 500;
       }
@@ -586,6 +634,19 @@ void update_enemies() {
             break;
         }
         break;
+      case ENEMY_STATE_ATTACKING:
+        if (enemy1.shoot_cooldown == 0) {
+          projectile.x = enemy1.x - camera_x + 8 - 16 + 8;
+          projectile.y = enemy1.y - camera_y + 16 - 16;
+          projectile.flags |= PROJECTILE_SHOW;
+          projectile.dx = 1;
+          projectile.dy = 2;
+          enemy1.shoot_cooldown = 60;
+          set_sprite_tile(OAM_PROJECTILE, projectile_baseTile);
+        } else {
+          enemy1.shoot_cooldown--;
+        }
+        break;
     }
     // Animate
     switch (enemy1.direction) {
@@ -600,6 +661,17 @@ void update_enemies() {
     }
   } else {
     move_metasprite(soldier_metasprites[0], soldier_baseTile, enemy1.oam_id, 0, 0);
+  }
+}
+
+void update_projectiles() {
+  if ((projectile.flags & PROJECTILE_SHOW) != 0) {
+    projectile.x += projectile.dx;
+    projectile.y += projectile.dy;
+
+    move_sprite(OAM_PROJECTILE, projectile.x, projectile.y);
+  } else {
+    move_sprite(OAM_PROJECTILE, 0, 0);
   }
 }
 
@@ -620,8 +692,8 @@ void check_bkg_collision() {
   }
 
   // Debug
-  // set_sprite_tile(17, debug_baseTile);
-  // move_sprite(17, player_x + offset_x - 4 + 8, player_y + offset_y - 4 + 16);
+  // set_sprite_tile(OAM_DEBUG, debug_baseTile);
+  // move_sprite(OAM_DEBUG, player_x + offset_x - 4 + 8, player_y + offset_y - 4 + 16);
 
   uint8_t x_tile = ((camera_x + player_x + offset_x) % 255) >> 3u;
   uint8_t y_tile = ((camera_y + player_y + offset_y) % 255) >> 3u;
@@ -677,10 +749,10 @@ void check_attack_collision() {
   uint16_t enemy_box_y_2 = enemy1.y + 4 - camera_y;
 
   // Debug
-  // set_sprite_tile(17, 0x20);
-  // set_sprite_tile(18, 0x20);
-  // move_sprite(17, punch_box_x + 8, punch_box_y + 16);
-  // move_sprite(18, enemy_box_x + 8, enemy_box_y + 16);
+  // set_sprite_tile(OAM_DEBUG, 0x20);
+  // set_sprite_tile(OAM_DEBUG + 1, 0x20);
+  // move_sprite(OAM_DEBUG, punch_box_x + 8, punch_box_y + 16);
+  // move_sprite(OAM_DEBUG + 1, enemy_box_x + 8, enemy_box_y + 16);
 
   if (
     punch_box_x < enemy_box_x_2 && 
@@ -704,6 +776,10 @@ void check_attack_collision() {
         break;
     }
   }
+}
+
+void check_projectile_collision() {
+  // TODO
 }
 
 void check_destruct() {
@@ -737,10 +813,10 @@ void check_destruct() {
   // TODO: Allow multiple hits on certain types of blocks before destruction?
 
   // Debug
-  // set_sprite_tile(17, debug_baseTile);
-  // set_sprite_tile(18, debug_baseTile);
-  // move_sprite(17, hit_x_1 - 4 + 8, hit_y_1 - 4 + 16);
-  // move_sprite(18, hit_x_2 - 4 + 8, hit_y_2 - 4 + 16);
+  // set_sprite_tile(OAM_DEBUG, debug_baseTile);
+  // set_sprite_tile(OAM_DEBUG + 1, debug_baseTile);
+  // move_sprite(OAM_DEBUG, hit_x_1 - 4 + 8, hit_y_1 - 4 + 16);
+  // move_sprite(OAM_DEBUG + 1, hit_x_2 - 4 + 8, hit_y_2 - 4 + 16);
 
   hit_x_1 += camera_x;
   hit_x_2 += camera_x;
