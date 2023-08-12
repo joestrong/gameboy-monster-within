@@ -126,10 +126,12 @@ const UWORD palettes[] = {
   RGB_WHITE, RGB_LIGHTGRAY, RGB_WHITE, RGB_WHITE, // BG Fade-in
   RGB_WHITE, RGB_LIGHTGRAY, RGB_DARKGRAY, RGB_WHITE, // BG Fade-in 2
   RGB_WHITE, RGB_LIGHTGRAY, RGB_DARKGRAY, RGB_BLACK, // BG B&W
+
   RGB_YELLOW, RGB_WHITE, RGB_BLACK, RGB_BLACK, // Dialog
 
   RGB_WHITE, RGB_BLUE, RGB_DARKBLUE, RGB_BLACK, // Sprite Blue
   RGB_WHITE, RGB(0x15, 9, 9), RGB(0x10, 0, 0), RGB(5, 0, 0), // Sprite Red (Enemy)
+  RGB_WHITE, RGB_WHITE, RGB_WHITE, RGB_WHITE, // Projectile
 };
 
 const BYTE destruct_map[] = {
@@ -219,7 +221,7 @@ void main() {
   // Set pallette defaults
   set_bkg_palette(0, 1, &palettes[0]);
   set_bkg_palette(1, 1, &palettes[4*4]); // Dialog
-  set_sprite_palette(0, 2, &palettes[5*4]); // Sprites
+  set_sprite_palette(0, 3, &palettes[5*4]); // Sprites
   #if skip_intro == 1
     state = 2;
     loadGame();
@@ -643,6 +645,7 @@ void update_enemies() {
           projectile.dy = 2;
           enemy1.shoot_cooldown = 60;
           set_sprite_tile(OAM_PROJECTILE, projectile_baseTile);
+          set_sprite_prop(OAM_PROJECTILE, 0x02);
         } else {
           enemy1.shoot_cooldown--;
         }
