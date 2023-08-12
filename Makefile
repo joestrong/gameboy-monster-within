@@ -1,6 +1,6 @@
 .PHONY: gfx
 
-CC	= ${GBDK_HOME}/bin/lcc -Wa-l -Wl-m -Wl-j -Wm-yS -Wm-yC -Wm-yn"MonsterIns"
+CC = ${GBDK_HOME}/bin/lcc -debug -Wm-yC -Wm-yn"MonsterIns" 
 
 all: gfx main
 
