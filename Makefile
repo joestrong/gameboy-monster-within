@@ -15,7 +15,8 @@ main: src/main.c
 		src/tiles/arm_v.c \
 		src/tiles/arm_v_back.c \
 		src/tiles/dialog.c \
-		src/tiles/soldier.c
+		src/tiles/soldier.c \
+		src/helpers/hitbox.c
 
 gfx: gfx/*.png
 	png2asset gfx/gbcompologo.png -c src/tiles/gbcompologo.c -map

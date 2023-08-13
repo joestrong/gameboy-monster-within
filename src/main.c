@@ -4,6 +4,7 @@
 #include <gb/cgb.h>
 #include <gbdk/metasprites.h>
 #include <gbdk/font.h>
+#include "./helpers/hitbox.h"
 #include "./tiles/gbcompologo.h"
 #include "./tiles/title.h"
 #include "./tiles/overworld.h"
@@ -43,7 +44,7 @@
 
 #define OAM_ENEMY_START 12
 #define OAM_PROJECTILE 16
-#define OAM_DEBUG 39
+#define OAM_DEBUG 38
 
 #define DIR_UP 1
 #define DIR_RIGHT 2
@@ -83,6 +84,7 @@ void check_bkg_collision();
 void check_attack_collision();
 void check_projectile_collision();
 void set_camera();
+void show_debug_marker(uint8_t offset, uint8_t x, uint8_t y);
 
 uint8_t state = 0; // 0 - Compo Logo 1 - Title, 2 - Game
 uint8_t event_state = 0; // 0 - prison cell start, 1 - prison cell
@@ -638,8 +640,8 @@ void update_enemies() {
         break;
       case ENEMY_STATE_ATTACKING:
         if (enemy1.shoot_cooldown == 0) {
-          projectile.x = enemy1.x - camera_x + 8 - 16 + 8;
-          projectile.y = enemy1.y - camera_y + 16 - 16;
+          projectile.x = enemy1.x + 8 - 16 + 8;
+          projectile.y = enemy1.y + 16 - 16;
           projectile.flags |= PROJECTILE_SHOW;
           projectile.dx = 1;
           projectile.dy = 2;
@@ -672,7 +674,7 @@ void update_projectiles() {
     projectile.x += projectile.dx;
     projectile.y += projectile.dy;
 
-    move_sprite(OAM_PROJECTILE, projectile.x, projectile.y);
+    move_sprite(OAM_PROJECTILE, projectile.x - camera_x + 8, projectile.y - camera_y + 16);
   } else {
     move_sprite(OAM_PROJECTILE, 0, 0);
   }
@@ -695,8 +697,7 @@ void check_bkg_collision() {
   }
 
   // Debug
-  // set_sprite_tile(OAM_DEBUG, debug_baseTile);
-  // move_sprite(OAM_DEBUG, player_x + offset_x - 4 + 8, player_y + offset_y - 4 + 16);
+  // show_debug_marker(0, player_x + offset_x - 4, player_y + offset_y - 4);
 
   uint8_t x_tile = ((camera_x + player_x + offset_x) % 255) >> 3u;
   uint8_t y_tile = ((camera_y + player_y + offset_y) % 255) >> 3u;
@@ -752,10 +753,8 @@ void check_attack_collision() {
   uint16_t enemy_box_y_2 = enemy1.y + 4 - camera_y;
 
   // Debug
-  // set_sprite_tile(OAM_DEBUG, 0x20);
-  // set_sprite_tile(OAM_DEBUG + 1, 0x20);
-  // move_sprite(OAM_DEBUG, punch_box_x + 8, punch_box_y + 16);
-  // move_sprite(OAM_DEBUG + 1, enemy_box_x + 8, enemy_box_y + 16);
+  // show_debug_marker(0, punch_box_x, punch_box_y);
+  // show_debug_marker(1, enemy_box_x, enemy_box_y);
 
   if (
     punch_box_x < enemy_box_x_2 && 
@@ -782,7 +781,31 @@ void check_attack_collision() {
 }
 
 void check_projectile_collision() {
-  // TODO
+  if ((projectile.flags & PROJECTILE_SHOW) == 0) {
+    return;
+  }
+
+  // Collide with BG
+  uint8_t tile_id = get_bkg_tile_xy(projectile.x >> 3, projectile.y >> 3);
+  if (tile_id <= 1 || (tile_id >= 6 && tile_id <= 0x0C)) {
+    projectile.flags &= ~PROJECTILE_SHOW;
+    return;
+  }
+
+  // Collide with Player
+  hitbox player_hitbox;
+  hitbox projectile_hitbox;
+  player_hitbox = get_player_hitbox(player_x + camera_x, player_y + camera_y);
+  projectile_hitbox = get_projectile_hitbox(projectile.x, projectile.y);
+
+  // Debug
+  // show_debug_marker(0, player_hitbox.x - camera_x, player_hitbox.y - camera_y);
+  // show_debug_marker(1, player_hitbox.x2 - camera_x, player_hitbox.y2 - camera_y);
+
+  if (check_hitbox_overlap(player_hitbox, projectile_hitbox)) {
+    projectile.flags &= ~PROJECTILE_SHOW;
+    return;
+  }
 }
 
 void check_destruct() {
@@ -816,10 +839,8 @@ void check_destruct() {
   // TODO: Allow multiple hits on certain types of blocks before destruction?
 
   // Debug
-  // set_sprite_tile(OAM_DEBUG, debug_baseTile);
-  // set_sprite_tile(OAM_DEBUG + 1, debug_baseTile);
-  // move_sprite(OAM_DEBUG, hit_x_1 - 4 + 8, hit_y_1 - 4 + 16);
-  // move_sprite(OAM_DEBUG + 1, hit_x_2 - 4 + 8, hit_y_2 - 4 + 16);
+  // show_debug_marker(0, hit_x_1 - 4, hit_y_1 - 4);
+  // show_debug_marker(1, hit_x_2 - 4, hit_y_2 - 4);
 
   hit_x_1 += camera_x;
   hit_x_2 += camera_x;
@@ -876,4 +897,9 @@ void set_camera() {
     
     old_camera_x = camera_x;
     old_camera_y = camera_y;
+}
+
+void show_debug_marker(uint8_t offset, uint8_t x, uint8_t y) {
+  set_sprite_tile(OAM_DEBUG + offset, debug_baseTile);
+  move_sprite(OAM_DEBUG + offset, x + 8, y + 16);
 }
