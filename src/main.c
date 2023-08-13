@@ -5,6 +5,7 @@
 #include <gbdk/metasprites.h>
 #include <gbdk/font.h>
 #include "./helpers/hitbox.h"
+#include "./helpers/vector.h"
 #include "./tiles/gbcompologo.h"
 #include "./tiles/title.h"
 #include "./tiles/overworld.h"
@@ -640,11 +641,17 @@ void update_enemies() {
         break;
       case ENEMY_STATE_ATTACKING:
         if (enemy1.shoot_cooldown == 0) {
-          projectile.x = enemy1.x + 8 - 16 + 8;
-          projectile.y = enemy1.y + 16 - 16;
+          vector projectile_vector;
+          projectile_vector = get_normalised_vector(
+            (player_x + camera_x) - enemy1.x,
+            (player_y + camera_y) - enemy1.y
+          );
+
+          projectile.x = enemy1.x;
+          projectile.y = enemy1.y - 10;
           projectile.flags |= PROJECTILE_SHOW;
-          projectile.dx = 1;
-          projectile.dy = 2;
+          projectile.dx = projectile_vector.x;
+          projectile.dy = projectile_vector.y;
           enemy1.shoot_cooldown = 60;
           set_sprite_tile(OAM_PROJECTILE, projectile_baseTile);
           set_sprite_prop(OAM_PROJECTILE, 0x02);
