@@ -1,3 +1,6 @@
+#pragma bank 0
+
+#include <gb/gb.h>
 #include "vector.h"
 
 #define ANGLE 10

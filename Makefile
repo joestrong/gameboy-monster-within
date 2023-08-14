@@ -1,12 +1,14 @@
 .PHONY: gfx
 
-CC = ${GBDK_HOME}/bin/lcc -debug -Wm-yC -Wm-yn"MonsterIns" 
+CC = ${GBDK_HOME}/bin/lcc -debug -autobank -Wm-yC -Wm-yn"MonsterIns" -Wm-yt0x19 -Wm-yoA
 
 all: gfx main
 
 main: src/main.c
 	$(CC) -o out/main.gb \
 		src/main.c \
+		src/intro.c \
+		src/overworld.c \
 		src/tiles/gbcompologo.c \
 		src/tiles/title.c \
 		src/tiles/overworld.c \
@@ -20,9 +22,9 @@ main: src/main.c
 		src/helpers/vector.c
 
 gfx: gfx/*.png
-	png2asset gfx/gbcompologo.png -c src/tiles/gbcompologo.c -map
-	png2asset gfx/title.png -c src/tiles/title.c -map
-	png2asset gfx/overworld.png -c src/tiles/overworld.c -map
+	png2asset gfx/gbcompologo.png -c src/tiles/gbcompologo.c -map -b 255
+	png2asset gfx/title.png -c src/tiles/title.c -map -b 255
+	png2asset gfx/overworld.png -c src/tiles/overworld.c -map -b 255
 	png2asset gfx/player.png -c src/tiles/player.c -spr8x16 -sw 16 -sh 32
 	png2asset gfx/arm_h.png -c src/tiles/arm_h.c -spr8x16 -sw 24 -sh 16
 	png2asset gfx/arm_v.png -c src/tiles/arm_v.c -spr8x16 -sw 16 -sh 32

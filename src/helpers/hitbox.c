@@ -1,3 +1,6 @@
+#pragma bank 0
+
+#include <gb/gb.h>
 #include "hitbox.h"
 
 hitbox get_player_hitbox(uint8_t player_screen_x, uint8_t player_screen_y) {

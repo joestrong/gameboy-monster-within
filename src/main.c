@@ -1,13 +1,16 @@
+#pragma bank 0
+
 #include <stdint.h>
 #include <string.h>
 #include <gb/gb.h>
 #include <gb/cgb.h>
 #include <gbdk/metasprites.h>
 #include <gbdk/font.h>
+#include "./globals.h"
+#include "./intro.h"
+#include "./overworld.h"
 #include "./helpers/hitbox.h"
 #include "./helpers/vector.h"
-#include "./tiles/gbcompologo.h"
-#include "./tiles/title.h"
 #include "./tiles/overworld.h"
 #include "./tiles/player.h"
 #include "./tiles/arm_h.h"
@@ -18,16 +21,8 @@
 
 #define skip_intro 1
 
-#define MIN(A,B) ((A)<(B)?(A):(B))
-#define bigmap_mapHeight 32
-#define bigmap_mapWidth 32
-
 #define font_BYTE_OFFSET 394
 #define font_TILE_COUNT 26
-
-#define overworld_baseTile 0
-#define font_baseTile overworld_TILE_COUNT
-#define dialog_baseTile font_baseTile + font_TILE_COUNT
 
 #define debug_TILE_COUNT 1
 #define projectile_TILE_COUNT 1
@@ -65,27 +60,6 @@
 
 #define TRANSFORM_LENGTH 15 * 60 // 15 seconds
 #define TRANSFORM_COOLDOWN 15 * 60 // 15 seconds
-
-void perLineInterrupt();
-void loadCompoLogoScreen();
-void updateCompoLogoScreen();
-void loadTitleScreen();
-void updateTitleScreen();
-void loadGame();
-void updateGame();
-void process_events();
-void show_dialog(char* text);
-void show_hint(char* text);
-void hide_hud();
-void update_enemies();
-void update_projectiles();
-void check_destruct();
-void destroy_tile(uint8_t tile_x, uint8_t tile_y);
-void check_bkg_collision();
-void check_attack_collision();
-void check_projectile_collision();
-void set_camera();
-void show_debug_marker(uint8_t offset, uint8_t x, uint8_t y);
 
 uint8_t state = 0; // 0 - Compo Logo 1 - Title, 2 - Game
 uint8_t event_state = 0; // 0 - prison cell start, 1 - prison cell
@@ -263,89 +237,13 @@ void perLineInterrupt() {
   }
 }
 
-void loadCompoLogoScreen() {
-  set_bkg_data(0x00, gbcompologo_TILE_COUNT, gbcompologo_tiles);
-  set_bkg_tiles(0, 0, 20, 18, gbcompologo_map);
-  fade_counter = 0;
-  set_bkg_palette(0, 1, &palettes[0]);
-   
-  DISPLAY_ON;
-}
-
-void updateCompoLogoScreen() {
-  switch (fade_counter) {
-    case 5:
-      set_bkg_palette(0, 1, &palettes[1*4]);
-      break;
-    case 10:
-      set_bkg_palette(0, 1, &palettes[2*4]);
-      break;
-    case 15:
-      set_bkg_palette(0, 1, &palettes[3*4]);
-      break;
-    case 120:
-      set_bkg_palette(0, 1, &palettes[2*4]);
-      break;
-    case 125:
-      set_bkg_palette(0, 1, &palettes[1*4]);
-      break;
-    case 130:
-      set_bkg_palette(0, 1, &palettes[0]);
-      break;
-    case 135:
-      state = 1;
-      loadTitleScreen();
-      break;
-  }
-  fade_counter++;
-}
-
-void loadTitleScreen() {
-  DISPLAY_OFF;
-
-  set_bkg_data(0x00, title_TILE_COUNT, title_tiles);
-  set_bkg_tiles(0, 0, 20, 18, title_map);
-  fade_counter = 0;
-   
-  DISPLAY_ON;
-}
-
-void updateTitleScreen() {
-  switch (fade_counter) {
-    case 5:
-      set_bkg_palette(0, 1, &palettes[1*4]);
-      break;
-    case 10:
-      set_bkg_palette(0, 1, &palettes[2*4]);
-      break;
-    case 15:
-      set_bkg_palette(0, 1, &palettes[3*4]);
-      break;
-    case 160:
-      set_bkg_palette(0, 1, &palettes[2*4]);
-      break;
-    case 165:
-      set_bkg_palette(0, 1, &palettes[1*4]);
-      break;
-    case 170:
-      set_bkg_palette(0, 1, &palettes[0]);
-      break;
-    case 175:
-      state = 2;
-      loadGame();
-      break;
-  }
-  fade_counter++;
-}
-
 void loadGame() {
   DISPLAY_OFF;
 
   fade_counter = 0;
 
   // BKG
-  set_bkg_data(overworld_baseTile, overworld_TILE_COUNT, overworld_tiles);
-  set_bkg_submap(0, 0, 21, 19, overworld_map, bigmap_mapWidth);
+  load_overworld();
   // Font
   set_bkg_1bpp_data(font_baseTile, font_TILE_COUNT, &font_spect[font_BYTE_OFFSET]);
 
@@ -650,8 +548,8 @@ void update_enemies() {
           projectile.x = enemy1.x;
           projectile.y = enemy1.y - 10;
           projectile.flags |= PROJECTILE_SHOW;
-          projectile.dx = projectile_vector.x;
-          projectile.dy = projectile_vector.y;
+          projectile.dx = 1;//projectile_vector.x;
+          projectile.dy = 1;//projectile_vector.y;
           enemy1.shoot_cooldown = 60;
           set_sprite_tile(OAM_PROJECTILE, projectile_baseTile);
           set_sprite_prop(OAM_PROJECTILE, 0x02);
@@ -874,36 +772,6 @@ void destroy_tile(uint8_t tile_x, uint8_t tile_y) {
     tile_y--;
     count++;
   }
-}
-
-void set_camera() {
-    SCY_REG = camera_y;
-    SCX_REG = camera_x; 
-    
-    map_pos_y = (uint8_t)(camera_y >> 3u);
-    if (map_pos_y != old_map_pos_y) { 
-        if (camera_y < old_camera_y) {
-            set_bkg_submap(map_pos_x, map_pos_y, MIN(21u, bigmap_mapWidth-map_pos_x), 1, overworld_map, bigmap_mapWidth);
-        } else {
-            if ((bigmap_mapHeight - 18u) > map_pos_y) {
-              set_bkg_submap(map_pos_x, map_pos_y + 18u, MIN(21u, bigmap_mapWidth-map_pos_x), 1, overworld_map, bigmap_mapWidth);
-            }
-        }
-        old_map_pos_y = map_pos_y; 
-    }
-    
-    map_pos_x = (uint8_t)(camera_x >> 3u);
-    if (map_pos_x != old_map_pos_x) {
-        if (camera_x < old_camera_x) {
-            set_bkg_submap(map_pos_x, map_pos_y, 1, MIN(19u, bigmap_mapHeight - map_pos_y), overworld_map, bigmap_mapWidth);     
-        } else {
-            if ((bigmap_mapWidth - 20u) > map_pos_x) set_bkg_submap(map_pos_x + 20u, map_pos_y, 1, MIN(19u, bigmap_mapHeight - map_pos_y), overworld_map, bigmap_mapWidth);     
-        }
-        old_map_pos_x = map_pos_x;
-    }
-    
-    old_camera_x = camera_x;
-    old_camera_y = camera_y;
 }
 
 void show_debug_marker(uint8_t offset, uint8_t x, uint8_t y) {
