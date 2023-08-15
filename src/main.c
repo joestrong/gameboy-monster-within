@@ -158,6 +158,13 @@ struct enemy {
     uint8_t flags;
     uint8_t state;
     uint8_t shoot_cooldown;
+    // Waypoints
+    uint8_t current_target_x;
+    uint8_t current_target_y;
+    uint8_t current_target;
+    uint8_t target;
+    uint8_t patrol_target_1;
+    uint8_t patrol_target_2;
 };
 #define ENEMY_SHOW 1
 #define ENEMY_STATE_STOPPED 0
@@ -166,12 +173,18 @@ struct enemy {
 
 struct enemy enemy1 = {
   .x = 32,
-  .y = 32,
+  .y = 16,
   .direction = DIR_RIGHT,
   .oam_id = OAM_ENEMY_START,
   .flags = 0,
   .state = ENEMY_STATE_STOPPED,
   .shoot_cooldown = 0,
+  .current_target_x = 0,
+  .current_target_y = 0,
+  .current_target = 1,
+  .target = 2,
+  .patrol_target_1 = 0,
+  .patrol_target_2 = 2,
 };
 
 struct projectile {
@@ -515,27 +528,39 @@ void update_enemies() {
       case ENEMY_STATE_STOPPED:
         break;
       case ENEMY_STATE_PATROL:
-        switch (enemy1.direction) {
-          case DIR_RIGHT:
-            if (enemy1.x > 200) {
-              enemy1.direction = DIR_LEFT;
+        if (enemy1.current_target_x == 0) {
+          waypoint current_target;
+          current_target = get_waypoint(enemy1.current_target);
+          enemy1.current_target_x = current_target.x << 3;
+          enemy1.current_target_y = current_target.y << 3;
+        }
+        if (enemy1.x < enemy1.current_target_x) {
+          enemy1.x++;
+        }
+        if (enemy1.x > enemy1.current_target_x) {
+          enemy1.x--;
+        }
+        if (enemy1.y < enemy1.current_target_y) {
+          enemy1.y++;
+        }
+        if (enemy1.y > enemy1.current_target_y) {
+          enemy1.y--;
+        }
+        if (enemy1.x == enemy1.current_target_x && enemy1.y == enemy1.current_target_y) {
+          // End of patrol path, set next target
+          if (enemy1.target == enemy1.current_target) {
+            if (enemy1.patrol_target_2 != enemy1.target) {
+              enemy1.target = enemy1.patrol_target_2;
             } else {
-              enemy1.x++;
+              enemy1.target = enemy1.patrol_target_1;
             }
-            break;
-          case DIR_LEFT:
-            if (enemy1.x < 16) {
-              enemy1.direction = DIR_RIGHT;
-            } else {
-              enemy1.x--;
-            }
-            break;
-          case DIR_DOWN:
-            enemy1.y++;
-            break;
-          case DIR_UP:
-            enemy1.y--;
-            break;
+          }
+          // Get next waypoint
+          waypoint next_target;
+          next_target = get_next_waypoint(enemy1.current_target, enemy1.target);
+          enemy1.current_target = next_target.id;
+          enemy1.current_target_x = next_target.x << 3;
+          enemy1.current_target_y = next_target.y << 3;
         }
         break;
       case ENEMY_STATE_ATTACKING:

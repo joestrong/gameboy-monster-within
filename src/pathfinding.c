@@ -36,5 +36,8 @@ waypoint get_waypoint(UBYTE id) {
 }
 
 waypoint get_next_waypoint(UBYTE current, UBYTE target) {
-    return get_waypoint(waypoints[current * WAYPOINT_COUNT + target]);
+     waypoint my_waypoint;
+     my_waypoint = get_waypoint(waypoint_map[current * WAYPOINT_COUNT + target]);
+
+     return my_waypoint;
 }
