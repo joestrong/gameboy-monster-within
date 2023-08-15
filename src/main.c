@@ -9,6 +9,7 @@
 #include "./globals.h"
 #include "./intro.h"
 #include "./overworld.h"
+#include "./pathfinding.h"
 #include "./helpers/hitbox.h"
 #include "./helpers/vector.h"
 #include "./tiles/overworld.h"
@@ -548,8 +549,8 @@ void update_enemies() {
           projectile.x = enemy1.x;
           projectile.y = enemy1.y - 10;
           projectile.flags |= PROJECTILE_SHOW;
-          projectile.dx = 1;//projectile_vector.x;
-          projectile.dy = 1;//projectile_vector.y;
+          projectile.dx = projectile_vector.x;
+          projectile.dy = projectile_vector.y;
           enemy1.shoot_cooldown = 60;
           set_sprite_tile(OAM_PROJECTILE, projectile_baseTile);
           set_sprite_prop(OAM_PROJECTILE, 0x02);

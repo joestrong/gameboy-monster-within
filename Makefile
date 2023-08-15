@@ -9,6 +9,7 @@ main: src/main.c
 		src/main.c \
 		src/intro.c \
 		src/overworld.c \
+		src/pathfinding.c \
 		src/tiles/gbcompologo.c \
 		src/tiles/title.c \
 		src/tiles/overworld.c \
