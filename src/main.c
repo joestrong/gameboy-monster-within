@@ -53,8 +53,9 @@
 #define EVENT_PRISON_CELL_POST_SMASH 2
 #define EVENT_PRISON_CELL_AFTER_BATTLE 3
 
-#define HUD_Y 104
+#define HUD_DIALOG_Y 104
 #define HINT_HEIGHT 16
+#define HUD_Y 136
 
 #define HUD_DIALOG_MODE 1
 #define HUD_HINT_MODE 2
@@ -238,16 +239,19 @@ void main() {
 }
 
 void perLineInterrupt() {
-  if (LY_REG == HUD_Y) {
+  if (LY_REG == HUD_DIALOG_Y) {
     SHOW_WIN;
     if (hud_control & HUD_HINT_MODE) {
-      LYC_REG = HUD_Y + HINT_HEIGHT;
+      LYC_REG = HUD_DIALOG_Y + HINT_HEIGHT;
     }
   }
   // Hint Mode end line
-  if (LY_REG == HUD_Y + HINT_HEIGHT) {
+  if (LY_REG == HUD_DIALOG_Y + HINT_HEIGHT) {
     HIDE_WIN;
-    LYC_REG = HUD_Y;
+    LYC_REG = HUD_DIALOG_Y;
+  }
+  if (LY_REG == 128) {
+    SHOW_WIN;
   }
 }
 
@@ -267,9 +271,10 @@ void loadGame() {
   set_win_tiles(0, 0, 32, 5, dialog_map_attributes);
   VBK_REG=VBK_TILES;
   set_win_based_tiles(0, 0, 32, 5, dialog_map, dialog_baseTile);
-  WX_REG = 167;
-  WY_REG = 144;
   SHOW_WIN;
+
+  // Initial HUD
+  hide_hud();
 
   // Sprites
   set_sprite_data(0x00, player_TILE_COUNT, player_tiles);
@@ -504,22 +509,27 @@ void process_events() {
 void show_dialog(char* text) {
   hud_control &= ~HUD_HINT_MODE;
   WX_REG = 7;
-  WY_REG = HUD_Y;
-  fill_win_rect(1, 1, 18, 3, dialog_baseTile + 4);
+  WY_REG = HUD_DIALOG_Y;
+  LYC_REG = HUD_DIALOG_Y;
+  set_win_based_tiles(0, 0, 32, 5, dialog_map, dialog_baseTile);
+  //fill_win_rect(1, 1, 18, 3, dialog_baseTile + 4);
   set_win_based_tiles(1, 1, strlen(text), 1, text, font_baseTile - 65);
 }
 
 void show_hint(char* text) {
   hud_control |= HUD_HINT_MODE;
   WX_REG = 7;
-  WY_REG = HUD_Y;
+  WY_REG = HUD_DIALOG_Y;
+  LYC_REG = HUD_DIALOG_Y;
   fill_win_rect(0, 0, 20, 2, dialog_baseTile + 4);
   set_win_based_tiles(0, 0, 20, 2, text, font_baseTile - 65);
 }
 
 void hide_hud() {
-  WX_REG = 167;
-  WY_REG = 144;
+  WX_REG = 7;
+  WY_REG = HUD_Y;
+  LYC_REG = HUD_Y;
+  fill_win_rect(0, 0, 20, 1, dialog_baseTile + 4);
 }
 
 void update_enemies() {
