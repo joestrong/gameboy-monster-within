@@ -10,6 +10,7 @@ main: src/main.c
 		src/intro.c \
 		src/overworld.c \
 		src/pathfinding.c \
+		src/sprite_manager.c \
 		src/sprites/enemy.c \
 		src/tiles/gbcompologo.c \
 		src/tiles/title.c \

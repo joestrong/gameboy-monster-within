@@ -10,6 +10,7 @@
 #include "./intro.h"
 #include "./overworld.h"
 #include "./pathfinding.h"
+#include "./sprite_manager.h"
 #include "./sprites/enemy.h"
 #include "./helpers/hitbox.h"
 #include "./helpers/vector.h"
@@ -241,6 +242,7 @@ void loadGame() {
   player_sprite_y = player_y + player_sprite_y_offset;
 
   enemy1 = create_enemy(32, 16);
+  add_sprite(SPRITE_TYPE_ENEMY, enemy1);
 
   // Set up LY=LYC interrupt
   LYC_REG = HUD_Y;
@@ -372,6 +374,7 @@ void updateGame() {
     hide_sprite(11);
   }
 
+  update_sprites();
   update_enemies();
   update_projectiles();
 

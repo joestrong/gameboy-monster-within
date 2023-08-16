@@ -23,3 +23,7 @@ enemy* create_enemy(uint8_t x, uint8_t y) {
 
   return new_enemy;
 }
+
+void update_enemy(enemy* my_enemy) {
+  // TODO
+}

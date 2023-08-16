@@ -28,4 +28,6 @@ typedef struct enemy enemy;
 
 enemy* create_enemy(uint8_t x, uint8_t y);
 
+void update_enemy(enemy* my_enemy);
+
 #endif
