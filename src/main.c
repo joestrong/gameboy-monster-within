@@ -10,6 +10,7 @@
 #include "./intro.h"
 #include "./overworld.h"
 #include "./pathfinding.h"
+#include "./sprites/enemy.h"
 #include "./helpers/hitbox.h"
 #include "./helpers/vector.h"
 #include "./tiles/overworld.h"
@@ -38,15 +39,6 @@
 
 #define player_sprite_x_offset 8
 #define player_sprite_y_offset 12
-
-#define OAM_ENEMY_START 12
-#define OAM_PROJECTILE 16
-#define OAM_DEBUG 38
-
-#define DIR_UP 1
-#define DIR_RIGHT 2
-#define DIR_DOWN 4
-#define DIR_LEFT 8
 
 #define EVENT_PRISON_CELL_START 0
 #define EVENT_PRISON_CELL 1
@@ -150,42 +142,7 @@ const BYTE projectile_tiles[16] = {
   0x00, 0x00,
 };
 
-struct enemy {
-    uint8_t x;
-    uint8_t y;
-    uint8_t direction;
-    uint8_t oam_id;
-    uint8_t flags;
-    uint8_t state;
-    uint8_t shoot_cooldown;
-    // Waypoints
-    uint8_t current_target_x;
-    uint8_t current_target_y;
-    uint8_t current_target;
-    uint8_t target;
-    uint8_t patrol_target_1;
-    uint8_t patrol_target_2;
-};
-#define ENEMY_SHOW 1
-#define ENEMY_STATE_STOPPED 0
-#define ENEMY_STATE_PATROL 1
-#define ENEMY_STATE_ATTACKING 2
-
-struct enemy enemy1 = {
-  .x = 32,
-  .y = 16,
-  .direction = DIR_RIGHT,
-  .oam_id = OAM_ENEMY_START,
-  .flags = 0,
-  .state = ENEMY_STATE_STOPPED,
-  .shoot_cooldown = 0,
-  .current_target_x = 0,
-  .current_target_y = 0,
-  .current_target = 1,
-  .target = 2,
-  .patrol_target_1 = 0,
-  .patrol_target_2 = 2,
-};
+enemy* enemy1;
 
 struct projectile {
   uint8_t x;
@@ -282,6 +239,8 @@ void loadGame() {
 
   player_sprite_x = player_x + player_sprite_x_offset;
   player_sprite_y = player_y + player_sprite_y_offset;
+
+  enemy1 = create_enemy(32, 16);
 
   // Set up LY=LYC interrupt
   LYC_REG = HUD_Y;
@@ -460,8 +419,8 @@ void updateGame() {
 void process_events() {
   switch (event_state) {
     case EVENT_PRISON_CELL_START:
-      enemy1.flags |= ENEMY_SHOW;
-      enemy1.state |= ENEMY_STATE_PATROL;
+      enemy1->flags |= ENEMY_SHOW;
+      enemy1->state |= ENEMY_STATE_PATROL;
       if (counter == 180) {
         show_dialog("WHO AM I");
       }
@@ -479,7 +438,7 @@ void process_events() {
       break;
     case EVENT_PRISON_CELL:
       // TODO: Press B to punch
-      enemy1.state = ENEMY_STATE_ATTACKING;
+      enemy1->state = ENEMY_STATE_ATTACKING;
       if (counter > 600) {
         counter = 500;
       }
@@ -523,80 +482,80 @@ void hide_hud() {
 }
 
 void update_enemies() {
-  if (enemy1.flags & ENEMY_SHOW > 0) {
-    switch (enemy1.state) {
+  if (enemy1->flags & ENEMY_SHOW > 0) {
+    switch (enemy1->state) {
       case ENEMY_STATE_STOPPED:
         break;
       case ENEMY_STATE_PATROL:
-        if (enemy1.current_target_x == 0) {
+        if (enemy1->current_target_x == 0) {
           waypoint current_target;
-          current_target = get_waypoint(enemy1.current_target);
-          enemy1.current_target_x = current_target.x << 3;
-          enemy1.current_target_y = current_target.y << 3;
+          current_target = get_waypoint(enemy1->current_target);
+          enemy1->current_target_x = current_target.x << 3;
+          enemy1->current_target_y = current_target.y << 3;
         }
-        if (enemy1.x < enemy1.current_target_x) {
-          enemy1.x++;
+        if (enemy1->x < enemy1->current_target_x) {
+          enemy1->x++;
         }
-        if (enemy1.x > enemy1.current_target_x) {
-          enemy1.x--;
+        if (enemy1->x > enemy1->current_target_x) {
+          enemy1->x--;
         }
-        if (enemy1.y < enemy1.current_target_y) {
-          enemy1.y++;
+        if (enemy1->y < enemy1->current_target_y) {
+          enemy1->y++;
         }
-        if (enemy1.y > enemy1.current_target_y) {
-          enemy1.y--;
+        if (enemy1->y > enemy1->current_target_y) {
+          enemy1->y--;
         }
-        if (enemy1.x == enemy1.current_target_x && enemy1.y == enemy1.current_target_y) {
+        if (enemy1->x == enemy1->current_target_x && enemy1->y == enemy1->current_target_y) {
           // End of patrol path, set next target
-          if (enemy1.target == enemy1.current_target) {
-            if (enemy1.patrol_target_2 != enemy1.target) {
-              enemy1.target = enemy1.patrol_target_2;
+          if (enemy1->target == enemy1->current_target) {
+            if (enemy1->patrol_target_2 != enemy1->target) {
+              enemy1->target = enemy1->patrol_target_2;
             } else {
-              enemy1.target = enemy1.patrol_target_1;
+              enemy1->target = enemy1->patrol_target_1;
             }
           }
           // Get next waypoint
           waypoint next_target;
-          next_target = get_next_waypoint(enemy1.current_target, enemy1.target);
-          enemy1.current_target = next_target.id;
-          enemy1.current_target_x = next_target.x << 3;
-          enemy1.current_target_y = next_target.y << 3;
+          next_target = get_next_waypoint(enemy1->current_target, enemy1->target);
+          enemy1->current_target = next_target.id;
+          enemy1->current_target_x = next_target.x << 3;
+          enemy1->current_target_y = next_target.y << 3;
         }
         break;
       case ENEMY_STATE_ATTACKING:
-        if (enemy1.shoot_cooldown == 0) {
+        if (enemy1->shoot_cooldown == 0) {
           vector projectile_vector;
           projectile_vector = get_normalised_vector(
-            (player_x + camera_x) - enemy1.x,
-            (player_y + camera_y) - enemy1.y
+            (player_x + camera_x) - enemy1->x,
+            (player_y + camera_y) - enemy1->y
           );
 
-          projectile.x = enemy1.x;
-          projectile.y = enemy1.y - 10;
+          projectile.x = enemy1->x;
+          projectile.y = enemy1->y - 10;
           projectile.flags |= PROJECTILE_SHOW;
           projectile.dx = projectile_vector.x;
           projectile.dy = projectile_vector.y;
-          enemy1.shoot_cooldown = 60;
+          enemy1->shoot_cooldown = 60;
           set_sprite_tile(OAM_PROJECTILE, projectile_baseTile);
           set_sprite_prop(OAM_PROJECTILE, 0x02);
         } else {
-          enemy1.shoot_cooldown--;
+          enemy1->shoot_cooldown--;
         }
         break;
     }
     // Animate
-    switch (enemy1.direction) {
+    switch (enemy1->direction) {
       case DIR_RIGHT:
       case DIR_UP:
       case DIR_DOWN:
-        move_metasprite(soldier_metasprites[0], soldier_baseTile, enemy1.oam_id, enemy1.x - camera_x + player_sprite_x_offset, enemy1.y - camera_y + player_sprite_y_offset);
+        move_metasprite(soldier_metasprites[0], soldier_baseTile, enemy1->oam_id, enemy1->x - camera_x + player_sprite_x_offset, enemy1->y - camera_y + player_sprite_y_offset);
         break;
       case DIR_LEFT:
-        move_metasprite_vflip(soldier_metasprites[0], soldier_baseTile, enemy1.oam_id, enemy1.x - camera_x + player_sprite_x_offset, enemy1.y - camera_y + player_sprite_y_offset);
+        move_metasprite_vflip(soldier_metasprites[0], soldier_baseTile, enemy1->oam_id, enemy1->x - camera_x + player_sprite_x_offset, enemy1->y - camera_y + player_sprite_y_offset);
         break;
     }
   } else {
-    move_metasprite(soldier_metasprites[0], soldier_baseTile, enemy1.oam_id, 0, 0);
+    move_metasprite(soldier_metasprites[0], soldier_baseTile, enemy1->oam_id, 0, 0);
   }
 }
 
@@ -678,10 +637,10 @@ void check_attack_collision() {
       break;
   }
 
-  uint16_t enemy_box_x = enemy1.x - 4 - camera_x;
-  uint16_t enemy_box_x_2 = enemy1.x + 4 - camera_x;
-  uint16_t enemy_box_y = enemy1.y - 4 - camera_y;
-  uint16_t enemy_box_y_2 = enemy1.y + 4 - camera_y;
+  uint16_t enemy_box_x = enemy1->x - 4 - camera_x;
+  uint16_t enemy_box_x_2 = enemy1->x + 4 - camera_x;
+  uint16_t enemy_box_y = enemy1->y - 4 - camera_y;
+  uint16_t enemy_box_y_2 = enemy1->y + 4 - camera_y;
 
   // Debug
   // show_debug_marker(0, punch_box_x, punch_box_y);
@@ -696,16 +655,16 @@ void check_attack_collision() {
     // Overlap
     switch (direction) {
       case DIR_UP:
-        enemy1.y -= 5;
+        enemy1->y -= 5;
         break;
       case DIR_DOWN:
-        enemy1.y += 5;
+        enemy1->y += 5;
         break;
       case DIR_LEFT:
-        enemy1.x -= 5;
+        enemy1->x -= 5;
         break;
       case DIR_RIGHT:
-        enemy1.x += 5;
+        enemy1->x += 5;
         break;
     }
   }

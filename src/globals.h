@@ -10,6 +10,15 @@
 
 #define MIN(A,B) ((A)<(B)?(A):(B))
 
+#define DIR_UP 1
+#define DIR_RIGHT 2
+#define DIR_DOWN 4
+#define DIR_LEFT 8
+
+#define OAM_ENEMY_START 12
+#define OAM_PROJECTILE 16
+#define OAM_DEBUG 38
+
 extern uint8_t state; // 0 - Compo Logo 1 - Title, 2 - Game
 extern uint8_t event_state; // 0 - prison cell start, 1 - prison cell
 extern uint16_t counter;
