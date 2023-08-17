@@ -10,6 +10,8 @@ struct enemy {
     uint8_t flags;
     uint8_t state;
     uint8_t shoot_cooldown;
+    uint8_t health;
+    uint8_t hit_cooldown;
     // Waypoints
     uint8_t current_target_x;
     uint8_t current_target_y;
@@ -23,6 +25,7 @@ typedef struct enemy enemy;
 #define ENEMY_STATE_STOPPED 0
 #define ENEMY_STATE_PATROL 1
 #define ENEMY_STATE_ATTACKING 2
+#define ENEMY_STATE_HIT 3
 
 enemy* create_enemy(uint8_t x, uint8_t y);
 

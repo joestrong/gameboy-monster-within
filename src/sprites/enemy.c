@@ -19,6 +19,8 @@ enemy* create_enemy(uint8_t x, uint8_t y) {
   new_enemy->flags = 0;
   new_enemy->state = ENEMY_STATE_PATROL;
   new_enemy->shoot_cooldown = 0;
+  new_enemy->health = 3;
+  new_enemy->hit_cooldown = 0;
   new_enemy->current_target_x = 0;
   new_enemy->current_target_y = 0;
   new_enemy->current_target = 1;
@@ -31,6 +33,11 @@ enemy* create_enemy(uint8_t x, uint8_t y) {
 
 void update_enemy(enemy* enemy, uint8_t oam) {
   check_taking_damage(enemy);
+
+  if (enemy->health == 0) {
+    destroy_sprite(enemy);
+    return;
+  }
 
   switch (enemy->state) {
     case ENEMY_STATE_STOPPED:
@@ -91,6 +98,13 @@ void update_enemy(enemy* enemy, uint8_t oam) {
         enemy->shoot_cooldown--;
       }
       break;
+    case ENEMY_STATE_HIT:
+      if (enemy->hit_cooldown == 0) {
+        enemy->state = ENEMY_STATE_STOPPED;
+      } else {
+        enemy->hit_cooldown--;
+      }
+      break;
   }
 
   // Animate
@@ -107,7 +121,10 @@ void update_enemy(enemy* enemy, uint8_t oam) {
 }
 
 void check_taking_damage(enemy* enemy) {
-  if ((attack_flags & ATTACKING_PUNCH) == 0) {
+  if (
+    (attack_flags & ATTACKING_PUNCH) == 0 ||
+    enemy->state == ENEMY_STATE_HIT
+  ) {
     return;
   }
 
@@ -122,19 +139,23 @@ void check_taking_damage(enemy* enemy) {
   // show_debug_marker(1, enemy_box_x, enemy_box_y);
 
   if (check_hitbox_overlap(player_punch_box, enemy_hitbox)) {
-    // Overlap
+    enemy->health--;
+    enemy->state = ENEMY_STATE_HIT;
+    enemy->hit_cooldown = 30;
+
+    // Hit animation
     switch (direction) {
       case DIR_UP:
-        enemy->y -= 5;
+        enemy->y -= 10;
         break;
       case DIR_DOWN:
-        enemy->y += 5;
+        enemy->y += 10;
         break;
       case DIR_LEFT:
-        enemy->x -= 5;
+        enemy->x -= 10;
         break;
       case DIR_RIGHT:
-        enemy->x += 5;
+        enemy->x += 10;
         break;
     }
   }
