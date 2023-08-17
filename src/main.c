@@ -9,7 +9,6 @@
 #include "./globals.h"
 #include "./intro.h"
 #include "./overworld.h"
-#include "./pathfinding.h"
 #include "./sprite_manager.h"
 #include "./sprites/enemy.h"
 #include "./helpers/hitbox.h"
@@ -26,20 +25,6 @@
 
 #define font_BYTE_OFFSET 394
 #define font_TILE_COUNT 26
-
-#define debug_TILE_COUNT 1
-#define projectile_TILE_COUNT 1
-
-#define player_baseTile 0
-#define arm_h_baseTile player_TILE_COUNT
-#define arm_v_baseTile arm_h_baseTile + arm_h_TILE_COUNT
-#define arm_v_back_baseTile arm_v_baseTile + arm_v_TILE_COUNT
-#define soldier_baseTile arm_v_back_baseTile + arm_v_back_TILE_COUNT
-#define debug_baseTile soldier_baseTile + soldier_TILE_COUNT
-#define projectile_baseTile debug_baseTile + debug_TILE_COUNT + 1
-
-#define player_sprite_x_offset 8
-#define player_sprite_y_offset 12
 
 #define EVENT_PRISON_CELL_START 0
 #define EVENT_PRISON_CELL 1
@@ -145,15 +130,6 @@ const BYTE projectile_tiles[16] = {
 
 enemy* enemy1;
 
-struct projectile {
-  uint8_t x;
-  uint8_t y;
-  uint8_t flags;
-  int8_t dx;
-  int8_t dy;
-};
-#define PROJECTILE_SHOW 1
-
 struct projectile projectile = {
   .x = 0,
   .y = 0,
@@ -243,6 +219,9 @@ void loadGame() {
 
   enemy1 = create_enemy(32, 16);
   add_sprite(SPRITE_TYPE_ENEMY, enemy1);
+
+  enemy* enemy2 = create_enemy(64, 16);
+  add_sprite(SPRITE_TYPE_ENEMY, enemy2);
 
   // Set up LY=LYC interrupt
   LYC_REG = HUD_Y;
@@ -375,7 +354,6 @@ void updateGame() {
   }
 
   update_sprites();
-  update_enemies();
   update_projectiles();
 
   check_bkg_collision();
@@ -422,8 +400,6 @@ void updateGame() {
 void process_events() {
   switch (event_state) {
     case EVENT_PRISON_CELL_START:
-      enemy1->flags |= ENEMY_SHOW;
-      enemy1->state |= ENEMY_STATE_PATROL;
       if (counter == 180) {
         show_dialog("WHO AM I");
       }
@@ -482,84 +458,6 @@ void show_hint(char* text) {
 void hide_hud() {
   WX_REG = 167;
   WY_REG = 144;
-}
-
-void update_enemies() {
-  if (enemy1->flags & ENEMY_SHOW > 0) {
-    switch (enemy1->state) {
-      case ENEMY_STATE_STOPPED:
-        break;
-      case ENEMY_STATE_PATROL:
-        if (enemy1->current_target_x == 0) {
-          waypoint current_target;
-          current_target = get_waypoint(enemy1->current_target);
-          enemy1->current_target_x = current_target.x << 3;
-          enemy1->current_target_y = current_target.y << 3;
-        }
-        if (enemy1->x < enemy1->current_target_x) {
-          enemy1->x++;
-        }
-        if (enemy1->x > enemy1->current_target_x) {
-          enemy1->x--;
-        }
-        if (enemy1->y < enemy1->current_target_y) {
-          enemy1->y++;
-        }
-        if (enemy1->y > enemy1->current_target_y) {
-          enemy1->y--;
-        }
-        if (enemy1->x == enemy1->current_target_x && enemy1->y == enemy1->current_target_y) {
-          // End of patrol path, set next target
-          if (enemy1->target == enemy1->current_target) {
-            if (enemy1->patrol_target_2 != enemy1->target) {
-              enemy1->target = enemy1->patrol_target_2;
-            } else {
-              enemy1->target = enemy1->patrol_target_1;
-            }
-          }
-          // Get next waypoint
-          waypoint next_target;
-          next_target = get_next_waypoint(enemy1->current_target, enemy1->target);
-          enemy1->current_target = next_target.id;
-          enemy1->current_target_x = next_target.x << 3;
-          enemy1->current_target_y = next_target.y << 3;
-        }
-        break;
-      case ENEMY_STATE_ATTACKING:
-        if (enemy1->shoot_cooldown == 0) {
-          vector projectile_vector;
-          projectile_vector = get_normalised_vector(
-            (player_x + camera_x) - enemy1->x,
-            (player_y + camera_y) - enemy1->y
-          );
-
-          projectile.x = enemy1->x;
-          projectile.y = enemy1->y - 10;
-          projectile.flags |= PROJECTILE_SHOW;
-          projectile.dx = projectile_vector.x;
-          projectile.dy = projectile_vector.y;
-          enemy1->shoot_cooldown = 60;
-          set_sprite_tile(OAM_PROJECTILE, projectile_baseTile);
-          set_sprite_prop(OAM_PROJECTILE, 0x02);
-        } else {
-          enemy1->shoot_cooldown--;
-        }
-        break;
-    }
-    // Animate
-    switch (enemy1->direction) {
-      case DIR_RIGHT:
-      case DIR_UP:
-      case DIR_DOWN:
-        move_metasprite(soldier_metasprites[0], soldier_baseTile, enemy1->oam_id, enemy1->x - camera_x + player_sprite_x_offset, enemy1->y - camera_y + player_sprite_y_offset);
-        break;
-      case DIR_LEFT:
-        move_metasprite_vflip(soldier_metasprites[0], soldier_baseTile, enemy1->oam_id, enemy1->x - camera_x + player_sprite_x_offset, enemy1->y - camera_y + player_sprite_y_offset);
-        break;
-    }
-  } else {
-    move_metasprite(soldier_metasprites[0], soldier_baseTile, enemy1->oam_id, 0, 0);
-  }
 }
 
 void update_projectiles() {

@@ -7,7 +7,6 @@ struct enemy {
     uint8_t x;
     uint8_t y;
     uint8_t direction;
-    uint8_t oam_id;
     uint8_t flags;
     uint8_t state;
     uint8_t shoot_cooldown;
@@ -28,6 +27,6 @@ typedef struct enemy enemy;
 
 enemy* create_enemy(uint8_t x, uint8_t y);
 
-void update_enemy(enemy* my_enemy);
+void update_enemy(enemy* my_enemy, uint8_t oam);
 
 #endif

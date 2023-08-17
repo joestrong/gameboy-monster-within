@@ -4,7 +4,7 @@
 #define SPRITE_MANAGER_H
 
 #define SPRITE_TYPE_ENEMY 0
-#define SPRITE_TYPE_PROJECTILE 0
+#define SPRITE_TYPE_PROJECTILE 1
 
 void add_sprite(uint8_t type, void* object);
 
