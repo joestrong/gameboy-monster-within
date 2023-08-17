@@ -10,4 +10,6 @@ void add_sprite(uint8_t type, void* object);
 
 void update_sprites();
 
+void destroy_sprite(void* object);
+
 #endif

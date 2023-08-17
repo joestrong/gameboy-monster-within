@@ -2,6 +2,8 @@
 
 #include <stdlib.h>
 #include "enemy.h"
+#include "projectile.h"
+#include "../sprite_manager.h"
 #include "../tiles/soldier.h"
 #include "../globals.h"
 #include "../pathfinding.h"
@@ -75,14 +77,14 @@ void update_enemy(enemy* enemy, uint8_t oam) {
             (player_y + camera_y) - enemy->y
           );
 
-          projectile.x = enemy->x;
-          projectile.y = enemy->y - 10;
-          projectile.flags |= PROJECTILE_SHOW;
-          projectile.dx = projectile_vector.x;
-          projectile.dy = projectile_vector.y;
+          projectile* projectile = create_projectile(
+            enemy->x,
+            enemy->y - 10, 
+            projectile_vector.x, 
+            projectile_vector.y
+          );
+          add_sprite(SPRITE_TYPE_PROJECTILE, projectile);
           enemy->shoot_cooldown = 60;
-          set_sprite_tile(OAM_PROJECTILE, projectile_baseTile);
-          set_sprite_prop(OAM_PROJECTILE, 0x02);
         } else {
           enemy->shoot_cooldown--;
         }

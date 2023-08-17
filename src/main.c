@@ -11,6 +11,7 @@
 #include "./overworld.h"
 #include "./sprite_manager.h"
 #include "./sprites/enemy.h"
+#include "./sprites/projectile.h"
 #include "./helpers/hitbox.h"
 #include "./helpers/vector.h"
 #include "./tiles/overworld.h"
@@ -117,26 +118,7 @@ const BYTE debug_tiles[16] = {
   0x18, 0x18,
 };
 
-const BYTE projectile_tiles[16] = {
-  0xC0, 0xC0,
-  0xC0, 0xC0,
-  0x00, 0x00,
-  0x00, 0x00,
-  0x00, 0x00,
-  0x00, 0x00,
-  0x00, 0x00,
-  0x00, 0x00,
-};
-
 enemy* enemy1;
-
-struct projectile projectile = {
-  .x = 0,
-  .y = 0,
-  .flags = 0,
-  .dx = 0,
-  .dy = 0,
-};
 
 void main() {
   DISPLAY_OFF;
@@ -354,11 +336,9 @@ void updateGame() {
   }
 
   update_sprites();
-  update_projectiles();
 
   check_bkg_collision();
   check_attack_collision();
-  check_projectile_collision();
 
   if ((attack_flags & ATTACKING_PUNCH) && transform_remaining_counter > 0) {
     check_destruct();
@@ -460,17 +440,6 @@ void hide_hud() {
   WY_REG = 144;
 }
 
-void update_projectiles() {
-  if ((projectile.flags & PROJECTILE_SHOW) != 0) {
-    projectile.x += projectile.dx;
-    projectile.y += projectile.dy;
-
-    move_sprite(OAM_PROJECTILE, projectile.x - camera_x + 8, projectile.y - camera_y + 16);
-  } else {
-    move_sprite(OAM_PROJECTILE, 0, 0);
-  }
-}
-
 void check_bkg_collision() {
   int8_t offset_x = 0;
   int8_t offset_y = 0;
@@ -568,34 +537,6 @@ void check_attack_collision() {
         enemy1->x += 5;
         break;
     }
-  }
-}
-
-void check_projectile_collision() {
-  if ((projectile.flags & PROJECTILE_SHOW) == 0) {
-    return;
-  }
-
-  // Collide with BG
-  uint8_t tile_id = get_bkg_tile_xy(projectile.x >> 3, projectile.y >> 3);
-  if (tile_id <= 1 || (tile_id >= 6 && tile_id <= 0x0C)) {
-    projectile.flags &= ~PROJECTILE_SHOW;
-    return;
-  }
-
-  // Collide with Player
-  hitbox player_hitbox;
-  hitbox projectile_hitbox;
-  player_hitbox = get_player_hitbox(player_x + camera_x, player_y + camera_y);
-  projectile_hitbox = get_projectile_hitbox(projectile.x, projectile.y);
-
-  // Debug
-  // show_debug_marker(0, player_hitbox.x - camera_x, player_hitbox.y - camera_y);
-  // show_debug_marker(1, player_hitbox.x2 - camera_x, player_hitbox.y2 - camera_y);
-
-  if (check_hitbox_overlap(player_hitbox, projectile_hitbox)) {
-    projectile.flags &= ~PROJECTILE_SHOW;
-    return;
   }
 }
 

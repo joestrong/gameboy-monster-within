@@ -36,8 +36,7 @@
 #define DIR_DOWN 4
 #define DIR_LEFT 8
 
-#define OAM_ENEMY_START 12
-#define OAM_PROJECTILE 16
+#define OAM_MANAGER_START 12
 #define OAM_DEBUG 38
 
 extern uint8_t state; // 0 - Compo Logo 1 - Title, 2 - Game
@@ -58,17 +57,6 @@ extern int8_t old_map_pos_y;
 extern uint8_t player_x;
 extern uint8_t player_y;
 
-extern const BYTE projectile_tiles[16];
-struct projectile {
-  uint8_t x;
-  uint8_t y;
-  uint8_t flags;
-  int8_t dx;
-  int8_t dy;
-};
-#define PROJECTILE_SHOW 1
-extern struct projectile projectile;
-
 void perLineInterrupt();
 void loadGame();
 void updateGame();
@@ -76,12 +64,10 @@ void process_events();
 void show_dialog(char* text);
 void show_hint(char* text);
 void hide_hud();
-void update_projectiles();
 void check_destruct();
 void destroy_tile(uint8_t tile_x, uint8_t tile_y);
 void check_bkg_collision();
 void check_attack_collision();
-void check_projectile_collision();
 void set_camera();
 void show_debug_marker(uint8_t offset, uint8_t x, uint8_t y);
 
