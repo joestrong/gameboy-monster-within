@@ -10,6 +10,6 @@ struct vector {
 
 typedef struct vector vector;
 
-vector get_normalised_vector(int8_t x, int8_t y);
+vector* get_normalised_vector(int8_t x, int8_t y);
 
 #endif

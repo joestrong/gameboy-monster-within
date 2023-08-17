@@ -80,8 +80,7 @@ void update_enemy(enemy* enemy, uint8_t oam) {
       break;
     case ENEMY_STATE_ATTACKING:
       if (enemy->shoot_cooldown == 0) {
-        vector projectile_vector;
-        projectile_vector = get_normalised_vector(
+        vector* projectile_vector = get_normalised_vector(
           (player_x + camera_x) - enemy->x,
           (player_y + camera_y) - enemy->y
         );
@@ -89,9 +88,11 @@ void update_enemy(enemy* enemy, uint8_t oam) {
         projectile* projectile = create_projectile(
           enemy->x,
           enemy->y - 10, 
-          projectile_vector.x, 
-          projectile_vector.y
+          projectile_vector->x, 
+          projectile_vector->y
         );
+
+        free(projectile_vector);
         add_sprite(SPRITE_TYPE_PROJECTILE, projectile);
         enemy->shoot_cooldown = 60;
       } else {
