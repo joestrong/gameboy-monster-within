@@ -56,6 +56,10 @@ extern int8_t old_map_pos_x;
 extern int8_t old_map_pos_y;
 extern uint8_t player_x;
 extern uint8_t player_y;
+extern uint8_t direction;
+extern uint8_t attack_flags;
+
+#define ATTACKING_PUNCH 1
 
 void perLineInterrupt();
 void loadGame();

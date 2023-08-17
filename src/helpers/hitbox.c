@@ -1,9 +1,11 @@
 #pragma bank 0
 
-#include <gb/gb.h>
+#include "stdint.h"
 #include "hitbox.h"
+#include "../globals.h"
+#include "../sprites/enemy.h"
 
-hitbox get_player_hitbox(uint8_t player_screen_x, uint8_t player_screen_y) {
+hitbox get_player_hitbox(uint16_t player_screen_x, uint16_t player_screen_y) {
     hitbox player_hitbox = {
         .x = player_screen_x - 4,
         .y = player_screen_y - 24,
@@ -14,7 +16,37 @@ hitbox get_player_hitbox(uint8_t player_screen_x, uint8_t player_screen_y) {
     return player_hitbox;
 }
 
-hitbox get_projectile_hitbox(uint8_t x, uint8_t y) {
+hitbox get_player_punch_hitbox(uint16_t player_screen_x, uint16_t player_screen_y) {
+  hitbox hitbox = {
+      .x = player_screen_x - 8,
+      .y = player_screen_y - 8,
+      .x2 = player_screen_x + 8,
+      .y2 = player_screen_y + 8,
+  };
+
+  switch (direction) {
+    case DIR_UP:
+      hitbox.y -= 10;
+      hitbox.y2 -= 10;
+      break;
+    case DIR_DOWN:
+      hitbox.y += 10;
+      hitbox.y2 += 10;
+      break;
+    case DIR_LEFT:
+      hitbox.x -= 12;
+      hitbox.x2 -= 12;
+      break;
+    case DIR_RIGHT:
+      hitbox.x += 12;
+      hitbox.x2 += 12;
+      break;
+  }
+
+  return hitbox;
+}
+
+hitbox get_projectile_hitbox(uint16_t x, uint16_t y) {
     hitbox player_hitbox = {
         .x = x,
         .y = y,
@@ -23,6 +55,17 @@ hitbox get_projectile_hitbox(uint8_t x, uint8_t y) {
     };
 
     return player_hitbox;
+}
+
+hitbox get_enemy_hitbox(enemy* enemy) {
+    hitbox hitbox = {
+        .x = enemy->x - 4,
+        .y = enemy->y - 4,
+        .x2 = enemy->x + 4,
+        .y2 = enemy->y + 4,
+    };
+
+    return hitbox;
 }
 
 uint8_t check_hitbox_overlap(hitbox a, hitbox b) {

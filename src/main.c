@@ -76,8 +76,6 @@ uint8_t active_arm = ARM_LEFT;
 uint8_t* punch_frame = &left_punch_frame;
 uint8_t attack_flags = 0;
 
-#define ATTACKING_PUNCH 1
-
 const UWORD palettes[] = {
   RGB_WHITE, RGB_WHITE, RGB_WHITE, RGB_WHITE, // BG Fade-in
   RGB_WHITE, RGB_LIGHTGRAY, RGB_WHITE, RGB_WHITE, // BG Fade-in
@@ -338,7 +336,6 @@ void updateGame() {
   update_sprites();
 
   check_bkg_collision();
-  check_attack_collision();
 
   if ((attack_flags & ATTACKING_PUNCH) && transform_remaining_counter > 0) {
     check_destruct();
@@ -475,67 +472,6 @@ void check_bkg_collision() {
     }
     if (direction_pressed & DIR_RIGHT) {
       player_x--;
-    }
-  }
-}
-
-void check_attack_collision() {
-  if ((attack_flags & ATTACKING_PUNCH) == 0) {
-    return;
-  }
-
-  uint16_t punch_box_x = player_x - 8;
-  uint16_t punch_box_x_2 = player_x + 8;
-  uint16_t punch_box_y = player_y - 8;
-  uint16_t punch_box_y_2 = player_y + 8;
-  switch (direction) {
-    case DIR_UP:
-      punch_box_y -= 10;
-      punch_box_y_2 -= 10;
-      break;
-    case DIR_DOWN:
-      punch_box_y += 10;
-      punch_box_y_2 += 10;
-      break;
-    case DIR_LEFT:
-      punch_box_x -= 12;
-      punch_box_x_2 -= 12;
-      break;
-    case DIR_RIGHT:
-      punch_box_x += 12;
-      punch_box_x_2 += 12;
-      break;
-  }
-
-  uint16_t enemy_box_x = enemy1->x - 4 - camera_x;
-  uint16_t enemy_box_x_2 = enemy1->x + 4 - camera_x;
-  uint16_t enemy_box_y = enemy1->y - 4 - camera_y;
-  uint16_t enemy_box_y_2 = enemy1->y + 4 - camera_y;
-
-  // Debug
-  // show_debug_marker(0, punch_box_x, punch_box_y);
-  // show_debug_marker(1, enemy_box_x, enemy_box_y);
-
-  if (
-    punch_box_x < enemy_box_x_2 && 
-    punch_box_x_2 > enemy_box_x &&
-    punch_box_y < enemy_box_y_2 &&
-    punch_box_y_2 > enemy_box_y
-  ) {
-    // Overlap
-    switch (direction) {
-      case DIR_UP:
-        enemy1->y -= 5;
-        break;
-      case DIR_DOWN:
-        enemy1->y += 5;
-        break;
-      case DIR_LEFT:
-        enemy1->x -= 5;
-        break;
-      case DIR_RIGHT:
-        enemy1->x += 5;
-        break;
     }
   }
 }
