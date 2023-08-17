@@ -31,7 +31,7 @@ void update_sprites() {
   }
 
   for (uint8_t i = oam; i < 40; i++) {
-    hide_sprite(oam);
+    hide_sprite(i);
   }
 }
 
