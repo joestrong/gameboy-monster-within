@@ -262,7 +262,7 @@ void updateGame() {
   }
 
   // Transform
-  if (keys & J_A && keys & J_B && transform_remaining_counter == 0) {
+  if (keys & J_SELECT && transform_remaining_counter == 0) {
     transform_remaining_counter = TRANSFORM_LENGTH;
   }
 
@@ -384,7 +384,7 @@ void process_events() {
         show_dialog("WHO AM I");
       }
       if (counter == 300) {
-        show_hint("     HOLD A AND B       TO TRANSFORM    ");
+        show_hint("    PRESS SELECT        TO TRANSFORM    ");
       }
       if (transform_remaining_counter > 0) {
         hide_hud();
