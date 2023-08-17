@@ -128,11 +128,8 @@ void check_taking_damage(enemy* enemy) {
     return;
   }
 
-  hitbox player_punch_box;
-  player_punch_box = get_player_punch_hitbox(player_x + camera_x, player_y + camera_y);
-
-  hitbox enemy_hitbox;
-  enemy_hitbox = get_enemy_hitbox(enemy);
+  hitbox* player_punch_box = get_player_punch_hitbox(player_x + camera_x, player_y + camera_y);
+  hitbox* enemy_hitbox = get_enemy_hitbox(enemy);
 
   // Debug
   // show_debug_marker(0, punch_box_x, punch_box_y);
@@ -159,4 +156,6 @@ void check_taking_damage(enemy* enemy) {
         break;
     }
   }
+  free(player_punch_box);
+  free(enemy_hitbox);
 }

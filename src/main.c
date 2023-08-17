@@ -12,8 +12,6 @@
 #include "./sprite_manager.h"
 #include "./sprites/enemy.h"
 #include "./sprites/projectile.h"
-#include "./helpers/hitbox.h"
-#include "./helpers/vector.h"
 #include "./tiles/overworld.h"
 #include "./tiles/player.h"
 #include "./tiles/arm_h.h"

@@ -49,10 +49,8 @@ void check_projectile_collision(projectile* projectile) {
   }
 
   // Collide with Player
-  hitbox player_hitbox;
-  hitbox projectile_hitbox;
-  player_hitbox = get_player_hitbox(player_x + camera_x, player_y + camera_y);
-  projectile_hitbox = get_projectile_hitbox(projectile->x, projectile->y);
+  hitbox* player_hitbox = get_player_hitbox(player_x + camera_x, player_y + camera_y);
+  hitbox* projectile_hitbox = get_projectile_hitbox(projectile->x, projectile->y);
 
   // Debug
   // show_debug_marker(0, player_hitbox.x - camera_x, player_hitbox.y - camera_y);
@@ -60,6 +58,8 @@ void check_projectile_collision(projectile* projectile) {
 
   if (check_hitbox_overlap(player_hitbox, projectile_hitbox)) {
     destroy_sprite(projectile);
-    return;
   }
+
+  free(player_hitbox);
+  free(projectile_hitbox);
 }
