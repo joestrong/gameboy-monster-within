@@ -2,3 +2,14 @@
 !/out/.gitkeep
 /resources
 /.vscode
+
+*.o
+*.ast
+*.sym
+*.lst
+*.adb
+*.asm
+*.cdb
+*.ihx
+*.map
+*.noi

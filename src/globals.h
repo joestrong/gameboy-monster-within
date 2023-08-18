@@ -1,5 +1,6 @@
 #include <gb/gb.h>
 #include <gb/cgb.h>
+#include "./music/hUGEDriver.h"
 #include "./tiles/overworld.h"
 #include "./tiles/player.h"
 #include "./tiles/arm_h.h"
@@ -60,6 +61,8 @@ extern uint8_t direction;
 extern uint8_t attack_flags;
 
 #define ATTACKING_PUNCH 1
+
+extern const hUGESong_t prison;
 
 void perLineInterrupt();
 void loadGame();

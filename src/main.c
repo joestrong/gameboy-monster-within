@@ -6,6 +6,7 @@
 #include <gb/cgb.h>
 #include <gbdk/metasprites.h>
 #include <gbdk/font.h>
+#include "./music/hUGEDriver.h"
 #include "./globals.h"
 #include "./intro.h"
 #include "./overworld.h"
@@ -125,6 +126,13 @@ void main() {
   set_bkg_palette(0, 1, &palettes[0]);
   set_bkg_palette(1, 1, &palettes[4*4]); // Dialog
   set_sprite_palette(0, 3, &palettes[5*4]); // Sprites
+
+  // Music
+  NR52_REG = 0x80;
+  NR51_REG = 0xFF;
+  NR50_REG = 0x77;
+  hUGE_init(&prison);
+
   #if skip_intro == 1
     state = 2;
     loadGame();
@@ -146,6 +154,8 @@ void main() {
     if (state == 2) {
       updateGame();
     }
+
+    hUGE_dosound();
   }
 }
 
