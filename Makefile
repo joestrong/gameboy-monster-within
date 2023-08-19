@@ -1,27 +1,27 @@
 .PHONY: gfx
 
-BINARY = out/main.gb
+BINARY = build/monster-inside.gb
 
-OBJECTS = src/main.o \
-		src/intro.o \
-		src/overworld.o \
-		src/pathfinding.o \
-		src/sprite_manager.o \
-		src/sprites/enemy.o \
-		src/sprites/projectile.o \
-		src/tiles/gbcompologo.o \
-		src/tiles/title.o \
-		src/tiles/overworld.o \
-		src/tiles/player.o \
-		src/tiles/arm_h.o \
-		src/tiles/arm_v.o \
-		src/tiles/arm_v_back.o \
-		src/tiles/dialog.o \
-		src/tiles/soldier.o \
-		src/helpers/hitbox.o \
-		src/helpers/vector.o \
-		src/music/banked.c \
-		src/music/prison.c
+OBJECTS = obj/src/main.o \
+		obj/src/intro.o \
+		obj/src/overworld.o \
+		obj/src/pathfinding.o \
+		obj/src/sprite_manager.o \
+		obj/src/sprites/enemy.o \
+		obj/src/sprites/projectile.o \
+		obj/src/tiles/gbcompologo.o \
+		obj/src/tiles/title.o \
+		obj/src/tiles/overworld.o \
+		obj/src/tiles/player.o \
+		obj/src/tiles/arm_h.o \
+		obj/src/tiles/arm_v.o \
+		obj/src/tiles/arm_v_back.o \
+		obj/src/tiles/dialog.o \
+		obj/src/tiles/soldier.o \
+		obj/src/helpers/hitbox.o \
+		obj/src/helpers/vector.o \
+		obj/src/music/banked.o \
+		obj/src/music/prison.o
 
 LIBRARIES = -Wl-lsrc/music/hUGEDriver.lib
 
@@ -30,9 +30,11 @@ CC = ${GBDK_HOME}/bin/lcc -debug -autobank -Wm-yC -Wm-yn"MonsterIns" -Wm-yt0x19 
 all: $(BINARY)
 
 $(BINARY): $(OBJECTS)
+	mkdir build
 	$(CC) $(LIBRARIES) -o $(BINARY) $(OBJECTS)
 
-%.o: %.c
+obj/%.o: %.c
+	mkdir -p obj/src/music obj/src/helpers obj/src/tiles obj/src/sprites
 	$(CC) -c -o $@ $<
 
 src/tiles/gbcompologo.c: gfx/gbcompologo.png
@@ -63,4 +65,4 @@ src/tiles/soldier.c: gfx/soldier.png
 	png2asset gfx/soldier.png -c src/tiles/soldier.c -spr8x16 -sw 16 -sh 32 -sp 0x01
 
 clean:
-	rm -f **/*.o **/*.lst **/*.map **/*.gb **/*~ **/*.rel **/*.cdb **/*.ihx **/*.lnk **/*.sym **/*.asm **/*.noi **/*.adb
+	rm -rf build obj

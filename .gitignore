@@ -1,6 +1,7 @@
-/out/*
-!/out/.gitkeep
+/obj
+/build
 /resources
+
 /.vscode
 
 *.o
