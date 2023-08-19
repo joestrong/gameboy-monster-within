@@ -488,28 +488,33 @@ void check_bkg_collision() {
 }
 
 void check_destruct() {
-  uint16_t hit_x_1 = player_x;
-  uint16_t hit_x_2 = player_x;
-  uint16_t hit_y_1 = player_y;
-  uint16_t hit_y_2 = player_y;
+  // 2 points, 2 places to destroy
+  uint16_t hit_x_1 = player_x + camera_x;
+  uint16_t hit_x_2 = player_x + camera_x;
+  uint16_t hit_y_1 = player_y + camera_y;
+  uint16_t hit_y_2 = player_y + camera_y;
   switch (direction) {
     case DIR_UP:
-      hit_y_1 = hit_y_2 -= 8;
+      hit_y_1 -= 8;
+      hit_y_2 -= 8;
       hit_x_1 -= 4;
       hit_x_2 += 4;
       break;
     case DIR_DOWN:
-      hit_y_1 = hit_y_2 += 8;
+      hit_y_1 += 10;
+      hit_y_2 += 10;
       hit_x_1 -= 4;
       hit_x_2 += 4;
       break;
     case DIR_LEFT:
-      hit_x_1 = hit_x_2 -= 8;
+      hit_x_1 -= 8;
+      hit_x_2 -= 8;
       hit_y_1 -= 4;
       hit_y_2 += 4;
       break;
     case DIR_RIGHT:
-      hit_x_1 = hit_x_2 += 8;
+      hit_x_1 += 8;
+      hit_x_2 += 8;
       hit_y_1 -= 4;
       hit_y_2 += 4;
       break;
@@ -518,13 +523,8 @@ void check_destruct() {
   // TODO: Allow multiple hits on certain types of blocks before destruction?
 
   // Debug
-  // show_debug_marker(0, hit_x_1 - 4, hit_y_1 - 4);
-  // show_debug_marker(1, hit_x_2 - 4, hit_y_2 - 4);
-
-  hit_x_1 += camera_x;
-  hit_x_2 += camera_x;
-  hit_y_1 += camera_y;
-  hit_y_2 += camera_y;
+  // show_debug_marker(0, hit_x_1 - camera_x - 4, hit_y_1 - camera_y - 4);
+  // show_debug_marker(1, hit_x_2 - camera_x - 4, hit_y_2 - camera_y - 4);
 
   destroy_tile((hit_x_1 >> 3), (hit_y_1 >> 3));
   destroy_tile((hit_x_2 >> 3), (hit_y_2 >> 3));
