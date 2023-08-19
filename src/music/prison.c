@@ -1,3 +1,5 @@
+#pragma bank 255
+
 #include "hUGEDriver.h"
 #include <stddef.h>
 
@@ -212,4 +214,5 @@ static const unsigned char waves[] = {
     147,115,178,189,29,238,42,85,202,123,43,150,90,39,204,174,
 };
 
+BANKREF(prison)
 const hUGESong_t prison = {7, &order_cnt, order1, order2, order3,order4, duty_instruments, wave_instruments, noise_instruments, NULL, waves};

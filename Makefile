@@ -20,6 +20,7 @@ OBJECTS = src/main.o \
 		src/tiles/soldier.o \
 		src/helpers/hitbox.o \
 		src/helpers/vector.o \
+		src/music/banked.c \
 		src/music/prison.c
 
 LIBRARIES = -Wl-lsrc/music/hUGEDriver.lib

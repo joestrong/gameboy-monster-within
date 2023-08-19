@@ -7,6 +7,7 @@
 #include <gbdk/metasprites.h>
 #include <gbdk/font.h>
 #include "./music/hUGEDriver.h"
+#include "./music/banked.h"
 #include "./globals.h"
 #include "./intro.h"
 #include "./overworld.h"
@@ -20,6 +21,8 @@
 #include "./tiles/arm_v_back.h"
 #include "./tiles/dialog.h"
 #include "./tiles/soldier.h"
+
+BANKREF_EXTERN(prison)
 
 #define skip_intro 1
 
@@ -131,7 +134,7 @@ void main() {
   NR52_REG = 0x80;
   NR51_REG = 0xFF;
   NR50_REG = 0x77;
-  hUGE_init(&prison);
+  hUGE_init_wrapper(&prison, BANK(prison));
 
   #if skip_intro == 1
     state = 2;
@@ -155,7 +158,7 @@ void main() {
       updateGame();
     }
 
-    hUGE_dosound();
+    hUGE_dosound_wrapper();
   }
 }
 
