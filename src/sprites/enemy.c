@@ -109,15 +109,26 @@ void update_enemy(enemy* enemy, uint8_t oam) {
   }
 
   // Animate
-  switch (enemy->direction) {
-    case DIR_RIGHT:
-    case DIR_UP:
-    case DIR_DOWN:
-      move_metasprite(soldier_metasprites[0], soldier_baseTile, oam, enemy->x - camera_x + player_sprite_x_offset, enemy->y - camera_y + player_sprite_y_offset);
-      break;
-    case DIR_LEFT:
-      move_metasprite_vflip(soldier_metasprites[0], soldier_baseTile, oam, enemy->x - camera_x + player_sprite_x_offset, enemy->y - camera_y + player_sprite_y_offset);
-      break;
+  uint16_t enemy_pos_x = enemy->x - camera_x;
+  uint16_t enemy_pos_y = enemy->y - camera_y;
+  if (
+    enemy_pos_x >= 0 &&
+    enemy_pos_x <= 160 &&
+    enemy_pos_y >= 0 &&
+    enemy_pos_y <= 144
+  ) {
+    switch (enemy->direction) {
+      case DIR_RIGHT:
+      case DIR_UP:
+      case DIR_DOWN:
+        move_metasprite(soldier_metasprites[0], soldier_baseTile, oam, enemy_pos_x + player_sprite_x_offset, enemy_pos_y + player_sprite_y_offset);
+        break;
+      case DIR_LEFT:
+        move_metasprite_vflip(soldier_metasprites[0], soldier_baseTile, oam, enemy_pos_x + player_sprite_x_offset, enemy_pos_y + player_sprite_y_offset);
+        break;
+    }
+  } else {
+    move_metasprite(soldier_metasprites[0], soldier_baseTile, oam, 0, 0);
   }
 }
 

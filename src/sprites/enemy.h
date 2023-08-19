@@ -4,8 +4,8 @@
 #define ENEMY_H
 
 struct enemy {
-    uint8_t x;
-    uint8_t y;
+    uint16_t x;
+    uint16_t y;
     uint8_t direction;
     uint8_t flags;
     uint8_t state;
@@ -13,8 +13,8 @@ struct enemy {
     uint8_t health;
     uint8_t hit_cooldown;
     // Waypoints
-    uint8_t current_target_x;
-    uint8_t current_target_y;
+    uint16_t current_target_x;
+    uint16_t current_target_y;
     uint8_t current_target;
     uint8_t target;
     uint8_t patrol_target_1;

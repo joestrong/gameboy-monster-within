@@ -50,7 +50,7 @@ uint8_t fade_counter = 0;
 
 uint8_t hud_control;
 
-int16_t camera_x = 0;
+int16_t camera_x = 64;
 int16_t camera_y = 0;
 int16_t old_camera_x = 0;
 int16_t old_camera_y = 0;

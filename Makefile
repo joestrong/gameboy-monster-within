@@ -30,7 +30,7 @@ CC = ${GBDK_HOME}/bin/lcc -debug -autobank -Wm-yC -Wm-yn"MonsterIns" -Wm-yt0x19 
 all: $(BINARY)
 
 $(BINARY): $(OBJECTS)
-	mkdir build
+	mkdir -p build
 	$(CC) $(LIBRARIES) -o $(BINARY) $(OBJECTS)
 
 obj/%.o: %.c

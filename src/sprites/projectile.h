@@ -6,8 +6,8 @@
 extern const uint8_t projectile_tiles[16];
 
 struct projectile {
-  uint8_t x;
-  uint8_t y;
+  uint16_t x;
+  uint16_t y;
   uint8_t flags;
   int8_t dx;
   int8_t dy;

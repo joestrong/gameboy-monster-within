@@ -6,7 +6,7 @@
 
 void load_overworld() BANKED {
   set_bkg_data(overworld_baseTile, overworld_TILE_COUNT, overworld_tiles);
-  set_bkg_submap(0, 0, 21, 19, overworld_map, bigmap_mapWidth);
+  set_bkg_submap(camera_x >> 3, camera_y >> 3, 21, 19, overworld_map, bigmap_mapWidth);
 }
 
 void set_camera() BANKED {
