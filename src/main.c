@@ -6,12 +6,14 @@
 #include <gb/cgb.h>
 #include <gbdk/metasprites.h>
 #include <gbdk/font.h>
+#include "./music/hUGEDriver.h"
+#include "./music/banked.h"
 #include "./globals.h"
 #include "./intro.h"
 #include "./overworld.h"
-#include "./pathfinding.h"
-#include "./helpers/hitbox.h"
-#include "./helpers/vector.h"
+#include "./sprite_manager.h"
+#include "./sprites/enemy.h"
+#include "./sprites/projectile.h"
 #include "./tiles/overworld.h"
 #include "./tiles/player.h"
 #include "./tiles/arm_h.h"
@@ -20,33 +22,12 @@
 #include "./tiles/dialog.h"
 #include "./tiles/soldier.h"
 
+BANKREF_EXTERN(prison)
+
 #define skip_intro 1
 
 #define font_BYTE_OFFSET 394
 #define font_TILE_COUNT 26
-
-#define debug_TILE_COUNT 1
-#define projectile_TILE_COUNT 1
-
-#define player_baseTile 0
-#define arm_h_baseTile player_TILE_COUNT
-#define arm_v_baseTile arm_h_baseTile + arm_h_TILE_COUNT
-#define arm_v_back_baseTile arm_v_baseTile + arm_v_TILE_COUNT
-#define soldier_baseTile arm_v_back_baseTile + arm_v_back_TILE_COUNT
-#define debug_baseTile soldier_baseTile + soldier_TILE_COUNT
-#define projectile_baseTile debug_baseTile + debug_TILE_COUNT + 1
-
-#define player_sprite_x_offset 8
-#define player_sprite_y_offset 12
-
-#define OAM_ENEMY_START 12
-#define OAM_PROJECTILE 16
-#define OAM_DEBUG 38
-
-#define DIR_UP 1
-#define DIR_RIGHT 2
-#define DIR_DOWN 4
-#define DIR_LEFT 8
 
 #define EVENT_PRISON_CELL_START 0
 #define EVENT_PRISON_CELL 1
@@ -70,7 +51,7 @@ uint8_t fade_counter = 0;
 
 uint8_t hud_control;
 
-int16_t camera_x = 0;
+int16_t camera_x = 64;
 int16_t camera_y = 0;
 int16_t old_camera_x = 0;
 int16_t old_camera_y = 0;
@@ -97,8 +78,6 @@ uint8_t right_punch_frame = 0; // 0, 1, 2
 uint8_t active_arm = ARM_LEFT;
 uint8_t* punch_frame = &left_punch_frame;
 uint8_t attack_flags = 0;
-
-#define ATTACKING_PUNCH 1
 
 const UWORD palettes[] = {
   RGB_WHITE, RGB_WHITE, RGB_WHITE, RGB_WHITE, // BG Fade-in
@@ -140,70 +119,7 @@ const BYTE debug_tiles[16] = {
   0x18, 0x18,
 };
 
-const BYTE projectile_tiles[16] = {
-  0xC0, 0xC0,
-  0xC0, 0xC0,
-  0x00, 0x00,
-  0x00, 0x00,
-  0x00, 0x00,
-  0x00, 0x00,
-  0x00, 0x00,
-  0x00, 0x00,
-};
-
-struct enemy {
-    uint8_t x;
-    uint8_t y;
-    uint8_t direction;
-    uint8_t oam_id;
-    uint8_t flags;
-    uint8_t state;
-    uint8_t shoot_cooldown;
-    // Waypoints
-    uint8_t current_target_x;
-    uint8_t current_target_y;
-    uint8_t current_target;
-    uint8_t target;
-    uint8_t patrol_target_1;
-    uint8_t patrol_target_2;
-};
-#define ENEMY_SHOW 1
-#define ENEMY_STATE_STOPPED 0
-#define ENEMY_STATE_PATROL 1
-#define ENEMY_STATE_ATTACKING 2
-
-struct enemy enemy1 = {
-  .x = 32,
-  .y = 16,
-  .direction = DIR_RIGHT,
-  .oam_id = OAM_ENEMY_START,
-  .flags = 0,
-  .state = ENEMY_STATE_STOPPED,
-  .shoot_cooldown = 0,
-  .current_target_x = 0,
-  .current_target_y = 0,
-  .current_target = 1,
-  .target = 2,
-  .patrol_target_1 = 0,
-  .patrol_target_2 = 2,
-};
-
-struct projectile {
-  uint8_t x;
-  uint8_t y;
-  uint8_t flags;
-  int8_t dx;
-  int8_t dy;
-};
-#define PROJECTILE_SHOW 1
-
-struct projectile projectile = {
-  .x = 0,
-  .y = 0,
-  .flags = 0,
-  .dx = 0,
-  .dy = 0,
-};
+enemy* enemy1;
 
 void main() {
   DISPLAY_OFF;
@@ -214,6 +130,13 @@ void main() {
   set_bkg_palette(0, 1, &palettes[0]);
   set_bkg_palette(1, 1, &palettes[4*4]); // Dialog
   set_sprite_palette(0, 3, &palettes[5*4]); // Sprites
+
+  // Music
+  NR52_REG = 0x80;
+  NR51_REG = 0xFF;
+  NR50_REG = 0x77;
+  hUGE_init_wrapper(&prison, BANK(prison));
+
   #if skip_intro == 1
     state = 2;
     loadGame();
@@ -235,6 +158,8 @@ void main() {
     if (state == 2) {
       updateGame();
     }
+
+    hUGE_dosound_wrapper();
   }
 }
 
@@ -287,6 +212,12 @@ void loadGame() {
 
   player_sprite_x = player_x + player_sprite_x_offset;
   player_sprite_y = player_y + player_sprite_y_offset;
+
+  enemy1 = create_enemy(32, 16);
+  add_sprite(SPRITE_TYPE_ENEMY, enemy1);
+
+  enemy* enemy2 = create_enemy(64, 16);
+  add_sprite(SPRITE_TYPE_ENEMY, enemy2);
 
   // Set up LY=LYC interrupt
   LYC_REG = HUD_Y;
@@ -345,7 +276,7 @@ void updateGame() {
   }
 
   // Transform
-  if (keys & J_A && keys & J_B && transform_remaining_counter == 0) {
+  if (keys & J_SELECT && transform_remaining_counter == 0) {
     transform_remaining_counter = TRANSFORM_LENGTH;
   }
 
@@ -418,12 +349,9 @@ void updateGame() {
     hide_sprite(11);
   }
 
-  update_enemies();
-  update_projectiles();
+  update_sprites();
 
   check_bkg_collision();
-  check_attack_collision();
-  check_projectile_collision();
 
   if ((attack_flags & ATTACKING_PUNCH) && transform_remaining_counter > 0) {
     check_destruct();
@@ -465,13 +393,11 @@ void updateGame() {
 void process_events() {
   switch (event_state) {
     case EVENT_PRISON_CELL_START:
-      enemy1.flags |= ENEMY_SHOW;
-      enemy1.state |= ENEMY_STATE_PATROL;
       if (counter == 180) {
         show_dialog("WHO AM I");
       }
       if (counter == 300) {
-        show_hint("     HOLD A AND B       TO TRANSFORM    ");
+        show_hint("    PRESS SELECT        TO TRANSFORM    ");
       }
       if (transform_remaining_counter > 0) {
         hide_hud();
@@ -484,7 +410,7 @@ void process_events() {
       break;
     case EVENT_PRISON_CELL:
       // TODO: Press B to punch
-      enemy1.state = ENEMY_STATE_ATTACKING;
+      enemy1->state = ENEMY_STATE_ATTACKING;
       if (counter > 600) {
         counter = 500;
       }
@@ -532,95 +458,6 @@ void hide_hud() {
   fill_win_rect(0, 0, 20, 1, dialog_baseTile + 4);
 }
 
-void update_enemies() {
-  if (enemy1.flags & ENEMY_SHOW > 0) {
-    switch (enemy1.state) {
-      case ENEMY_STATE_STOPPED:
-        break;
-      case ENEMY_STATE_PATROL:
-        if (enemy1.current_target_x == 0) {
-          waypoint current_target;
-          current_target = get_waypoint(enemy1.current_target);
-          enemy1.current_target_x = current_target.x << 3;
-          enemy1.current_target_y = current_target.y << 3;
-        }
-        if (enemy1.x < enemy1.current_target_x) {
-          enemy1.x++;
-        }
-        if (enemy1.x > enemy1.current_target_x) {
-          enemy1.x--;
-        }
-        if (enemy1.y < enemy1.current_target_y) {
-          enemy1.y++;
-        }
-        if (enemy1.y > enemy1.current_target_y) {
-          enemy1.y--;
-        }
-        if (enemy1.x == enemy1.current_target_x && enemy1.y == enemy1.current_target_y) {
-          // End of patrol path, set next target
-          if (enemy1.target == enemy1.current_target) {
-            if (enemy1.patrol_target_2 != enemy1.target) {
-              enemy1.target = enemy1.patrol_target_2;
-            } else {
-              enemy1.target = enemy1.patrol_target_1;
-            }
-          }
-          // Get next waypoint
-          waypoint next_target;
-          next_target = get_next_waypoint(enemy1.current_target, enemy1.target);
-          enemy1.current_target = next_target.id;
-          enemy1.current_target_x = next_target.x << 3;
-          enemy1.current_target_y = next_target.y << 3;
-        }
-        break;
-      case ENEMY_STATE_ATTACKING:
-        if (enemy1.shoot_cooldown == 0) {
-          vector projectile_vector;
-          projectile_vector = get_normalised_vector(
-            (player_x + camera_x) - enemy1.x,
-            (player_y + camera_y) - enemy1.y
-          );
-
-          projectile.x = enemy1.x;
-          projectile.y = enemy1.y - 10;
-          projectile.flags |= PROJECTILE_SHOW;
-          projectile.dx = projectile_vector.x;
-          projectile.dy = projectile_vector.y;
-          enemy1.shoot_cooldown = 60;
-          set_sprite_tile(OAM_PROJECTILE, projectile_baseTile);
-          set_sprite_prop(OAM_PROJECTILE, 0x02);
-        } else {
-          enemy1.shoot_cooldown--;
-        }
-        break;
-    }
-    // Animate
-    switch (enemy1.direction) {
-      case DIR_RIGHT:
-      case DIR_UP:
-      case DIR_DOWN:
-        move_metasprite(soldier_metasprites[0], soldier_baseTile, enemy1.oam_id, enemy1.x - camera_x + player_sprite_x_offset, enemy1.y - camera_y + player_sprite_y_offset);
-        break;
-      case DIR_LEFT:
-        move_metasprite_vflip(soldier_metasprites[0], soldier_baseTile, enemy1.oam_id, enemy1.x - camera_x + player_sprite_x_offset, enemy1.y - camera_y + player_sprite_y_offset);
-        break;
-    }
-  } else {
-    move_metasprite(soldier_metasprites[0], soldier_baseTile, enemy1.oam_id, 0, 0);
-  }
-}
-
-void update_projectiles() {
-  if ((projectile.flags & PROJECTILE_SHOW) != 0) {
-    projectile.x += projectile.dx;
-    projectile.y += projectile.dy;
-
-    move_sprite(OAM_PROJECTILE, projectile.x - camera_x + 8, projectile.y - camera_y + 16);
-  } else {
-    move_sprite(OAM_PROJECTILE, 0, 0);
-  }
-}
-
 void check_bkg_collision() {
   int8_t offset_x = 0;
   int8_t offset_y = 0;
@@ -660,118 +497,34 @@ void check_bkg_collision() {
   }
 }
 
-void check_attack_collision() {
-  if ((attack_flags & ATTACKING_PUNCH) == 0) {
-    return;
-  }
-
-  uint16_t punch_box_x = player_x - 8;
-  uint16_t punch_box_x_2 = player_x + 8;
-  uint16_t punch_box_y = player_y - 8;
-  uint16_t punch_box_y_2 = player_y + 8;
-  switch (direction) {
-    case DIR_UP:
-      punch_box_y -= 10;
-      punch_box_y_2 -= 10;
-      break;
-    case DIR_DOWN:
-      punch_box_y += 10;
-      punch_box_y_2 += 10;
-      break;
-    case DIR_LEFT:
-      punch_box_x -= 12;
-      punch_box_x_2 -= 12;
-      break;
-    case DIR_RIGHT:
-      punch_box_x += 12;
-      punch_box_x_2 += 12;
-      break;
-  }
-
-  uint16_t enemy_box_x = enemy1.x - 4 - camera_x;
-  uint16_t enemy_box_x_2 = enemy1.x + 4 - camera_x;
-  uint16_t enemy_box_y = enemy1.y - 4 - camera_y;
-  uint16_t enemy_box_y_2 = enemy1.y + 4 - camera_y;
-
-  // Debug
-  // show_debug_marker(0, punch_box_x, punch_box_y);
-  // show_debug_marker(1, enemy_box_x, enemy_box_y);
-
-  if (
-    punch_box_x < enemy_box_x_2 && 
-    punch_box_x_2 > enemy_box_x &&
-    punch_box_y < enemy_box_y_2 &&
-    punch_box_y_2 > enemy_box_y
-  ) {
-    // Overlap
-    switch (direction) {
-      case DIR_UP:
-        enemy1.y -= 5;
-        break;
-      case DIR_DOWN:
-        enemy1.y += 5;
-        break;
-      case DIR_LEFT:
-        enemy1.x -= 5;
-        break;
-      case DIR_RIGHT:
-        enemy1.x += 5;
-        break;
-    }
-  }
-}
-
-void check_projectile_collision() {
-  if ((projectile.flags & PROJECTILE_SHOW) == 0) {
-    return;
-  }
-
-  // Collide with BG
-  uint8_t tile_id = get_bkg_tile_xy(projectile.x >> 3, projectile.y >> 3);
-  if (tile_id <= 1 || (tile_id >= 6 && tile_id <= 0x0C)) {
-    projectile.flags &= ~PROJECTILE_SHOW;
-    return;
-  }
-
-  // Collide with Player
-  hitbox player_hitbox;
-  hitbox projectile_hitbox;
-  player_hitbox = get_player_hitbox(player_x + camera_x, player_y + camera_y);
-  projectile_hitbox = get_projectile_hitbox(projectile.x, projectile.y);
-
-  // Debug
-  // show_debug_marker(0, player_hitbox.x - camera_x, player_hitbox.y - camera_y);
-  // show_debug_marker(1, player_hitbox.x2 - camera_x, player_hitbox.y2 - camera_y);
-
-  if (check_hitbox_overlap(player_hitbox, projectile_hitbox)) {
-    projectile.flags &= ~PROJECTILE_SHOW;
-    return;
-  }
-}
-
 void check_destruct() {
-  uint16_t hit_x_1 = player_x;
-  uint16_t hit_x_2 = player_x;
-  uint16_t hit_y_1 = player_y;
-  uint16_t hit_y_2 = player_y;
+  // 2 points, 2 places to destroy
+  uint16_t hit_x_1 = player_x + camera_x;
+  uint16_t hit_x_2 = player_x + camera_x;
+  uint16_t hit_y_1 = player_y + camera_y;
+  uint16_t hit_y_2 = player_y + camera_y;
   switch (direction) {
     case DIR_UP:
-      hit_y_1 = hit_y_2 -= 8;
+      hit_y_1 -= 8;
+      hit_y_2 -= 8;
       hit_x_1 -= 4;
       hit_x_2 += 4;
       break;
     case DIR_DOWN:
-      hit_y_1 = hit_y_2 += 8;
+      hit_y_1 += 10;
+      hit_y_2 += 10;
       hit_x_1 -= 4;
       hit_x_2 += 4;
       break;
     case DIR_LEFT:
-      hit_x_1 = hit_x_2 -= 8;
+      hit_x_1 -= 8;
+      hit_x_2 -= 8;
       hit_y_1 -= 4;
       hit_y_2 += 4;
       break;
     case DIR_RIGHT:
-      hit_x_1 = hit_x_2 += 8;
+      hit_x_1 += 8;
+      hit_x_2 += 8;
       hit_y_1 -= 4;
       hit_y_2 += 4;
       break;
@@ -780,13 +533,8 @@ void check_destruct() {
   // TODO: Allow multiple hits on certain types of blocks before destruction?
 
   // Debug
-  // show_debug_marker(0, hit_x_1 - 4, hit_y_1 - 4);
-  // show_debug_marker(1, hit_x_2 - 4, hit_y_2 - 4);
-
-  hit_x_1 += camera_x;
-  hit_x_2 += camera_x;
-  hit_y_1 += camera_y;
-  hit_y_2 += camera_y;
+  // show_debug_marker(0, hit_x_1 - camera_x - 4, hit_y_1 - camera_y - 4);
+  // show_debug_marker(1, hit_x_2 - camera_x - 4, hit_y_2 - camera_y - 4);
 
   destroy_tile((hit_x_1 >> 3), (hit_y_1 >> 3));
   destroy_tile((hit_x_2 >> 3), (hit_y_2 >> 3));

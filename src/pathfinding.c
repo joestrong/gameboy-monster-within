@@ -3,14 +3,14 @@
 #include "pathfinding.h"
 
 // Stores tile_x and tile_y pairs
-UBYTE waypoints[] = {
-    4, 2,   // 0
-    28, 2,  // 1
-    28, 10, // 2
+const UBYTE waypoints[] = {
+    8, 2,   // 0
+    37, 2,  // 1
+    37, 10, // 2
 };
 
 // Stores next waypoint in journey to target waypoint
-UBYTE waypoint_map[] = {
+const UBYTE waypoint_map[] = {
     // Waypoint 0
     0,
     1, // To 1

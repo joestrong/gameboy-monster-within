@@ -1,20 +1,25 @@
 #include <stdint.h>
+#include "../sprites/enemy.h"
 
 #ifndef HITBOX_H
 #define HITBOX_H
 
 struct hitbox {
-  uint8_t x;
-  uint8_t y;
-  uint8_t x2;
-  uint8_t y2;
+  uint16_t x;
+  uint16_t y;
+  uint16_t x2;
+  uint16_t y2;
 };
 typedef struct hitbox hitbox;
 
-hitbox get_player_hitbox(uint8_t player_screen_x, uint8_t player_screen_y);
+hitbox* get_player_hitbox(uint16_t player_screen_x, uint16_t player_screen_y);
 
-hitbox get_projectile_hitbox(uint8_t x, uint8_t y);
+hitbox* get_player_punch_hitbox(uint16_t player_screen_x, uint16_t player_screen_y);
 
-uint8_t check_hitbox_overlap(hitbox a, hitbox b);
+hitbox* get_projectile_hitbox(uint16_t x, uint16_t y);
+
+hitbox* get_enemy_hitbox(enemy* enemy);
+
+uint8_t check_hitbox_overlap(hitbox* a, hitbox* b);
 
 #endif
