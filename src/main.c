@@ -65,6 +65,8 @@ uint8_t player_sprite_y = 0;
 uint8_t direction = 4;
 uint8_t direction_pressed = 0;
 
+uint8_t player_health = 8;
+
 uint16_t transform_remaining_counter = 0;
 uint16_t transform_cooldown_counter = 0;
 
@@ -84,7 +86,7 @@ const UWORD palettes[] = {
   RGB_WHITE, RGB_LIGHTGRAY, RGB_DARKGRAY, RGB_WHITE, // BG Fade-in 2
   RGB_WHITE, RGB_LIGHTGRAY, RGB_DARKGRAY, RGB_BLACK, // BG B&W
 
-  RGB_YELLOW, RGB_WHITE, RGB_BLACK, RGB_BLACK, // Dialog
+  RGB_YELLOW, RGB_WHITE, RGB_DARKBLUE, RGB_BLACK, // Dialog
 
   RGB_WHITE, RGB_BLUE, RGB_DARKBLUE, RGB_BLACK, // Sprite Blue
   RGB_WHITE, RGB(0x15, 9, 9), RGB(0x10, 0, 0), RGB(5, 0, 0), // Sprite Red (Enemy)
@@ -166,10 +168,12 @@ void perLineInterrupt() {
   if (LY_REG == 0) {
     LYC_REG = 7;
     SHOW_WIN;
+    HIDE_SPRITES;
   }
   if (LY_REG == 7) {
     LYC_REG = HUD_DIALOG_Y;
     HIDE_WIN;
+    SHOW_SPRITES;
   }
 
   if (LY_REG == HUD_DIALOG_Y) {
@@ -562,4 +566,20 @@ void destroy_tile(uint8_t tile_x, uint8_t tile_y) {
 void show_debug_marker(uint8_t offset, uint8_t x, uint8_t y) {
   set_sprite_tile(OAM_DEBUG + offset, debug_baseTile);
   move_sprite(OAM_DEBUG + offset, x + 8, y + 16);
+}
+
+void player_hit() {
+  player_health--;
+
+  if (player_health == 0) {
+    // TODO: Game Over
+  }
+  set_win_tile_xy(player_health, 0, 0x29);
+
+  if (player_health > 1) {
+    VBK_REG=VBK_ATTRIBUTES;
+    set_win_tile_xy(player_health - 1, 0, 0x21);
+    VBK_REG=VBK_TILES;
+  }
+  set_win_tile_xy(player_health - 1, 0, 0x27);
 }

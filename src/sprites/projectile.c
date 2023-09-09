@@ -70,6 +70,7 @@ void check_projectile_collision(projectile* projectile) {
 
   if (check_hitbox_overlap(player_hitbox, projectile_hitbox)) {
     destroy_sprite(projectile);
+    player_hit();
   }
 
   free(player_hitbox);

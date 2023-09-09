@@ -12,9 +12,9 @@
 #define dialog_WIDTH 256
 #define dialog_HEIGHT 256
 #define dialog_TILE_COUNT 7
-#define dialog_PALETTE_COUNT 2
+#define dialog_PALETTE_COUNT 1
 #define dialog_COLORS_PER_PALETTE 4
-#define dialog_TOTAL_COLORS 8
+#define dialog_TOTAL_COLORS 4
 #define dialog_MAP_ATTRIBUTES dialog_map_attributes
 #define dialog_MAP_ATTRIBUTES_WIDTH 32
 #define dialog_MAP_ATTRIBUTES_HEIGHT 32
@@ -23,7 +23,7 @@
 
 BANKREF_EXTERN(dialog)
 
-extern const palette_color_t dialog_palettes[8];
+extern const palette_color_t dialog_palettes[4];
 extern const uint8_t dialog_tiles[112];
 
 extern const unsigned char dialog_map[1024];
