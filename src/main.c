@@ -198,6 +198,8 @@ void loadGame() {
 
   fade_counter = 0;
 
+  // Hack - Place space character for text
+  set_bkg_data(0xEC, 1, dialog_tiles + 32);
   // BKG
   load_overworld();
   // Font
