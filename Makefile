@@ -1,6 +1,6 @@
 .PHONY: gfx
 
-BINARY = build/monster-inside.gb
+BINARY = build/monster-within.gbc
 
 OBJECTS = obj/src/main.o \
 		obj/src/intro.o \
