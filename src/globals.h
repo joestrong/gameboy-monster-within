@@ -59,6 +59,7 @@ extern uint8_t player_x;
 extern uint8_t player_y;
 extern uint8_t direction;
 extern uint8_t attack_flags;
+extern uint8_t player_health;
 
 #define ATTACKING_PUNCH 1
 
@@ -77,5 +78,6 @@ void check_bkg_collision();
 void check_attack_collision();
 void set_camera();
 void show_debug_marker(uint8_t offset, uint8_t x, uint8_t y);
+void player_hit();
 
 #endif
