@@ -10,12 +10,14 @@
 #include "./music/banked.h"
 #include "./globals.h"
 #include "./intro.h"
+#include "./game_over.h"
 #include "./overworld.h"
 #include "./sprite_manager.h"
 #include "./sprites/enemy.h"
 #include "./sprites/projectile.h"
 #include "./tiles/overworld.h"
 #include "./tiles/player.h"
+#include "./tiles/player_dead.h"
 #include "./tiles/arm_h.h"
 #include "./tiles/arm_v.h"
 #include "./tiles/arm_v_back.h"
@@ -25,9 +27,6 @@
 BANKREF_EXTERN(prison)
 
 #define skip_intro 1
-
-#define font_BYTE_OFFSET 394
-#define font_TILE_COUNT 26
 
 #define EVENT_PRISON_CELL_START 0
 #define EVENT_PRISON_CELL 1
@@ -43,7 +42,7 @@ BANKREF_EXTERN(prison)
 #define TRANSFORM_LENGTH 15 * 60 // 15 seconds
 #define TRANSFORM_COOLDOWN 15 * 60 // 15 seconds
 
-uint8_t state = 0; // 0 - Compo Logo 1 - Title, 2 - Game
+uint8_t state = 0; // 0 - Compo Logo 1 - Title, 2 - Game, 3 - Game over
 uint8_t event_state = 0; // 0 - prison cell start, 1 - prison cell
 uint16_t counter = 0;
 uint8_t fade_counter = 0;
@@ -64,6 +63,7 @@ uint8_t player_sprite_x = 0;
 uint8_t player_sprite_y = 0;
 uint8_t direction = 4;
 uint8_t direction_pressed = 0;
+uint8_t player_flags = 0;
 
 uint8_t player_health = 8;
 
@@ -160,6 +160,10 @@ void main() {
       updateGame();
     }
 
+    if (state == 3) {
+      update_game_over_screen();
+    }
+
     hUGE_dosound_wrapper();
   }
 }
@@ -220,13 +224,15 @@ void loadGame() {
   hide_hud();
 
   // Sprites
-  set_sprite_data(0x00, player_TILE_COUNT, player_tiles);
+  set_sprite_data(player_baseTile, player_TILE_COUNT, player_tiles);
+  set_sprite_data(player_dead_baseTile, player_dead_TILE_COUNT, player_dead_tiles);
   set_sprite_data(arm_h_baseTile, arm_h_TILE_COUNT, arm_h_tiles);
   set_sprite_data(arm_v_baseTile, arm_v_TILE_COUNT, arm_v_tiles);
   set_sprite_data(arm_v_back_baseTile, arm_v_back_TILE_COUNT, arm_v_back_tiles);
   set_sprite_data(soldier_baseTile, soldier_TILE_COUNT, soldier_tiles);
   set_sprite_data(debug_baseTile, debug_TILE_COUNT, debug_tiles);
   set_sprite_data(projectile_baseTile, projectile_TILE_COUNT, projectile_tiles);
+  SHOW_SPRITES;
 
   player_sprite_x = player_x + player_sprite_x_offset;
   player_sprite_y = player_y + player_sprite_y_offset;
@@ -268,6 +274,75 @@ void updateGame() {
 
   direction_pressed = 0;
 
+  if ((player_flags & PLAYER_DEAD) == 0) {
+    player_controls();
+  }
+
+  player_animations();
+
+  update_sprites();
+
+  check_bkg_collision();
+
+  if ((attack_flags & ATTACKING_PUNCH) && transform_remaining_counter > 0) {
+    check_destruct();
+  }
+
+  // Camera updates
+
+  if (player_x < 72 && camera_x > 0) {
+    player_x = 72;
+    camera_x--;
+  }
+  if (player_x > 72 && camera_x + 160 < overworld_WIDTH) {
+    player_x = 72;
+    camera_x++;
+  }
+  if (player_y < 80 && camera_y > 0) {
+    player_y = 80;
+    camera_y--;
+  }
+  if (player_y > 80 && camera_y + 144 < overworld_HEIGHT) {
+    player_y = 80;
+    camera_y++;
+  }
+  
+  set_camera();
+
+  counter++;
+  if (transform_remaining_counter > 0) {
+    transform_remaining_counter--;
+  }
+  if (transform_cooldown_counter > 0) {
+    transform_cooldown_counter--;
+  }
+  if (punch_counter > 0) {
+    punch_counter--;
+  }
+
+  if ((player_flags & PLAYER_DEAD) > 0) {
+    switch (fade_counter) {
+      case 80:
+        set_bkg_palette(0, 1, &palettes[3*4]);
+        break;
+      case 85:
+        set_bkg_palette(0, 1, &palettes[2*4]);
+        break;
+      case 90:
+        set_bkg_palette(0, 1, &palettes[1*4]);
+        break;
+      case 95:
+        load_game_over_screen();
+        state = 3;
+        break;
+    }
+    if (fade_counter < 95) {
+      fade_counter++;
+    }
+  }
+}
+
+void player_controls() {
   int keys = joypad();
 
   // Controls
@@ -308,8 +383,22 @@ void updateGame() {
       punch_frame = &left_punch_frame;
     }
   }
+}
 
-  // Animations
+void player_animations() {
+  if ((player_flags & PLAYER_DEAD) > 0) {
+    move_metasprite(player_dead_metasprites[0], player_dead_baseTile, 0, player_sprite_x, player_sprite_y);
+    hide_sprite(4);
+    hide_sprite(5);
+    hide_sprite(6);
+    hide_sprite(7);
+    hide_sprite(8);
+    hide_sprite(9);
+    hide_sprite(10);
+    hide_sprite(11);
+    hide_sprite(12);
+    return;
+  }
 
   if (punch_counter <= 10) {
     *punch_frame = 0;
@@ -364,46 +453,6 @@ void updateGame() {
     }
     hide_sprite(10);
     hide_sprite(11);
-  }
-
-  update_sprites();
-
-  check_bkg_collision();
-
-  if ((attack_flags & ATTACKING_PUNCH) && transform_remaining_counter > 0) {
-    check_destruct();
-  }
-
-  // Camera updates
-
-  if (player_x < 72 && camera_x > 0) {
-    player_x = 72;
-    camera_x--;
-  }
-  if (player_x > 72 && camera_x + 160 < overworld_WIDTH) {
-    player_x = 72;
-    camera_x++;
-  }
-  if (player_y < 80 && camera_y > 0) {
-    player_y = 80;
-    camera_y--;
-  }
-  if (player_y > 80 && camera_y + 144 < overworld_HEIGHT) {
-    player_y = 80;
-    camera_y++;
-  }
-  
-  set_camera();
-
-  counter++;
-  if (transform_remaining_counter > 0) {
-    transform_remaining_counter--;
-  }
-  if (transform_cooldown_counter > 0) {
-    transform_cooldown_counter--;
-  }
-  if (punch_counter > 0) {
-    punch_counter--;
   }
 }
 
@@ -571,11 +620,14 @@ void show_debug_marker(uint8_t offset, uint8_t x, uint8_t y) {
 }
 
 void player_hit() {
-  player_health--;
+  if (player_health > 0) {
+    player_health--;
 
-  if (player_health == 0) {
-    // TODO: Game Over
+    if (player_health == 0) {
+      player_flags |= PLAYER_DEAD;
+    }
   }
+
   set_win_tile_xy(player_health, 0, 0x29);
 
   if (player_health > 1) {

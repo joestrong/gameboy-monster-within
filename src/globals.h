@@ -3,6 +3,7 @@
 #include "./music/hUGEDriver.h"
 #include "./tiles/overworld.h"
 #include "./tiles/player.h"
+#include "./tiles/player_dead.h"
 #include "./tiles/arm_h.h"
 #include "./tiles/arm_v.h"
 #include "./tiles/arm_v_back.h"
@@ -15,12 +16,16 @@
 #define debug_TILE_COUNT 1
 #define projectile_TILE_COUNT 1
 
+#define font_BYTE_OFFSET 394
+#define font_TILE_COUNT 26
+
 #define overworld_baseTile 0
 #define font_baseTile overworld_TILE_COUNT
 #define dialog_baseTile font_baseTile + font_TILE_COUNT
 
 #define player_baseTile 0
-#define arm_h_baseTile player_TILE_COUNT
+#define player_dead_baseTile player_TILE_COUNT
+#define arm_h_baseTile player_dead_baseTile + player_dead_TILE_COUNT
 #define arm_v_baseTile arm_h_baseTile + arm_h_TILE_COUNT
 #define arm_v_back_baseTile arm_v_baseTile + arm_v_TILE_COUNT
 #define soldier_baseTile arm_v_back_baseTile + arm_v_back_TILE_COUNT
@@ -60,14 +65,21 @@ extern uint8_t player_y;
 extern uint8_t direction;
 extern uint8_t attack_flags;
 extern uint8_t player_health;
+extern uint8_t player_flags;
 
+// Attack Flags
 #define ATTACKING_PUNCH 1
+
+// Player Flags
+#define PLAYER_DEAD 1
 
 extern const hUGESong_t prison;
 
 void perLineInterrupt();
 void loadGame();
 void updateGame();
+void player_controls();
+void player_animations();
 void process_events();
 void show_dialog(char* text);
 void show_hint(char* text);
