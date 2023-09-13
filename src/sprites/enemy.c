@@ -10,7 +10,7 @@
 #include "../helpers/hitbox.h"
 #include "../helpers/vector.h"
 
-enemy* create_enemy(uint8_t x, uint8_t y) {
+enemy* create_enemy(uint16_t x, uint16_t y) {
   enemy* new_enemy = malloc(sizeof(enemy));
 
   new_enemy->x = x;

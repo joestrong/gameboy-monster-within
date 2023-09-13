@@ -27,7 +27,7 @@ typedef struct enemy enemy;
 #define ENEMY_STATE_ATTACKING 2
 #define ENEMY_STATE_HIT 3
 
-enemy* create_enemy(uint8_t x, uint8_t y);
+enemy* create_enemy(uint16_t x, uint16_t y);
 
 void update_enemy(enemy* my_enemy, uint8_t oam);
 

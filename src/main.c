@@ -243,6 +243,20 @@ void loadGame() {
   enemy* enemy2 = create_enemy(64, 16);
   add_sprite(SPRITE_TYPE_ENEMY, enemy2);
 
+  enemy* enemy3 = create_enemy(296, 144);
+  enemy3->patrol_target_1 = 2;
+  enemy3->patrol_target_2 = 3;
+  enemy3->current_target = 3;
+  enemy3->target = 3;
+  add_sprite(SPRITE_TYPE_ENEMY, enemy3);
+
+  enemy* enemy4 = create_enemy(240, 160);
+  enemy4->patrol_target_1 = 4;
+  enemy4->patrol_target_2 = 5;
+  enemy4->current_target = 5;
+  enemy4->target = 5;
+  add_sprite(SPRITE_TYPE_ENEMY, enemy4);
+
   // Set up LY=LYC interrupt
   STAT_REG |= STATF_LYC;
   add_LCD(perLineInterrupt);

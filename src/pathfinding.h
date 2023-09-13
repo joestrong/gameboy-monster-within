@@ -3,7 +3,7 @@
 #ifndef PATHFINDING_H
 #define PATHFINDING_H
 
-#define WAYPOINT_COUNT 3
+#define WAYPOINT_COUNT 6
 
 struct waypoint {
     UBYTE id;
