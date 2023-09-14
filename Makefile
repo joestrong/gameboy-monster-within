@@ -5,6 +5,7 @@ BINARY = build/monster-within_jam.gbc
 OBJECTS = obj/src/main.o \
 		obj/src/intro.o \
 		obj/src/game_over.o \
+		obj/src/game_finished.o \
 		obj/src/overworld.o \
 		obj/src/pathfinding.o \
 		obj/src/sprite_manager.o \
@@ -21,6 +22,7 @@ OBJECTS = obj/src/main.o \
 		obj/src/tiles/dialog.o \
 		obj/src/tiles/soldier.o \
 		obj/src/tiles/game_over.o \
+		obj/src/tiles/game_finished.o \
 		obj/src/helpers/hitbox.o \
 		obj/src/helpers/vector.o \
 		obj/src/music/banked.o \
@@ -72,6 +74,9 @@ src/tiles/soldier.c: gfx/soldier.png
 
 src/tiles/game_over.c: gfx/game_over.png
 	png2asset gfx/game_over.png -c src/tiles/game_over.c -map -b 255
+
+src/tiles/game_finished.c: gfx/game_finished.png
+	png2asset gfx/game_finished.png -c src/tiles/game_finished.c -map -b 255
 
 clean:
 	rm -rf build obj

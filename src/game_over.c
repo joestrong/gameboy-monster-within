@@ -1,9 +1,9 @@
 #pragma bank 255
 
+#include <gb/gb.h>
 #include "game_over.h"
 #include "./globals.h"
 #include "./tiles/game_over.h"
-#include "./intro.h"
 
 void load_game_over_screen() BANKED {
   HIDE_SPRITES;

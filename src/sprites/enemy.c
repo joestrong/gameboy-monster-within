@@ -36,6 +36,7 @@ void update_enemy(enemy* enemy, uint8_t oam) {
 
   if (enemy->health == 0) {
     destroy_sprite(enemy);
+    enemy_killed();
     return;
   }
 

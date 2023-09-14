@@ -11,6 +11,7 @@
 #include "./globals.h"
 #include "./intro.h"
 #include "./game_over.h"
+#include "./game_finished.h"
 #include "./overworld.h"
 #include "./sprite_manager.h"
 #include "./sprites/enemy.h"
@@ -42,7 +43,7 @@ BANKREF_EXTERN(prison)
 #define TRANSFORM_LENGTH 15 * 60 // 15 seconds
 #define TRANSFORM_COOLDOWN 15 * 60 // 15 seconds
 
-uint8_t state = 0; // 0 - Compo Logo 1 - Title, 2 - Game, 3 - Game over
+uint8_t state = 0; // 0 - Compo Logo 1 - Title, 2 - Game, 3 - Game over, 4 - Win
 uint8_t event_state = 0; // 0 - prison cell start, 1 - prison cell
 uint16_t counter = 0;
 uint8_t fade_counter = 0;
@@ -124,6 +125,8 @@ enemy* enemy1;
 enemy* enemy2;
 enemy* enemy3;
 enemy* enemy4;
+
+uint8_t enemy_count = 4;
 
 void main() {
   DISPLAY_OFF;
@@ -303,6 +306,11 @@ void updateGame() {
 
   if ((attack_flags & ATTACKING_PUNCH) && transform_remaining_counter > 0) {
     check_destruct();
+  }
+
+  // If game state has changed, don't process any more of updateGame
+  if (state != 2) {
+    return;
   }
 
   // Camera updates
@@ -656,4 +664,12 @@ void player_hit() {
     VBK_REG=VBK_TILES;
   }
   set_win_tile_xy(player_health - 1, 0, 0x27);
+}
+
+void enemy_killed() {
+  enemy_count--;
+  if (enemy_count == 0) {
+    load_game_finished_screen();
+    state = 4;
+  }
 }

@@ -91,5 +91,6 @@ void check_attack_collision();
 void set_camera();
 void show_debug_marker(uint8_t offset, uint8_t x, uint8_t y);
 void player_hit();
+void enemy_killed();
 
 #endif
