@@ -4,14 +4,14 @@
 
 // Stores tile_x and tile_y pairs
 const UBYTE waypoints[] = {
-    8, 2,   // 0
-    37, 2,  // 1
-    37, 10, // 2
+    8, 6,   // 0
+    37, 6,  // 1
+    37, 14, // 2
 
-    37, 18, // 3
+    37, 22, // 3
 
-    30, 20, // 4
-    10, 20, // 5
+    30, 24, // 4
+    10, 24, // 5
 };
 
 // Stores next waypoint in journey to target waypoint

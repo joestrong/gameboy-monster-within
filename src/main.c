@@ -59,7 +59,7 @@ int8_t map_pos_y = 0;
 int8_t old_map_pos_x = 0;
 int8_t old_map_pos_y = 0;
 uint8_t player_x = 72;
-uint8_t player_y = 80;
+uint8_t player_y = 112;
 uint8_t player_sprite_x = 0;
 uint8_t player_sprite_y = 0;
 uint8_t direction = 4;
@@ -95,19 +95,19 @@ const UWORD palettes[] = {
 };
 
 const BYTE destruct_map[] = {
-  0x02, // 0x00 Wall
-  0x02, // 0x01 Wall top
-  0x02,
-  0x03,
+  0x00,
+  0x00,
+  0x00, // 0x02 Wall top
+  0x00, // 0x03 Wall
   0x04,
   0x05,
   0x04, // 0x06 Fence/Gate
   0x05, // 0x07 Fence/Gate
   0x04, // 0x08 Fence/Gate
   0x05, // 0x09 Fence/Gate
-  0x02, // 0x0A Fence/Gate
-  0x03, // 0x0B Fence/Gate
-  0x02, // 0x0C Fence/Gate
+  0x00, // 0x0A Fence/Gate
+  0x00, // 0x0B Fence/Gate
+  0x00, // 0x0C Fence/Gate
 };
 
 const BYTE debug_tiles[16] = {
@@ -243,20 +243,20 @@ void loadGame() {
   player_sprite_x = player_x + player_sprite_x_offset;
   player_sprite_y = player_y + player_sprite_y_offset;
 
-  enemy1 = create_enemy(32, 16);
+  enemy1 = create_enemy(32, 48);
   add_sprite(SPRITE_TYPE_ENEMY, enemy1);
 
-  enemy2 = create_enemy(64, 16);
+  enemy2 = create_enemy(64, 48);
   add_sprite(SPRITE_TYPE_ENEMY, enemy2);
 
-  enemy3 = create_enemy(296, 144);
+  enemy3 = create_enemy(296, 176);
   enemy3->patrol_target_1 = 2;
   enemy3->patrol_target_2 = 3;
   enemy3->current_target = 3;
   enemy3->target = 3;
   add_sprite(SPRITE_TYPE_ENEMY, enemy3);
 
-  enemy4 = create_enemy(240, 160);
+  enemy4 = create_enemy(240, 192);
   enemy4->patrol_target_1 = 4;
   enemy4->patrol_target_2 = 5;
   enemy4->current_target = 5;
@@ -564,7 +564,7 @@ void check_bkg_collision() {
   uint8_t x_tile = ((camera_x + player_x + offset_x) % 255) >> 3u;
   uint8_t y_tile = ((camera_y + player_y + offset_y) % 255) >> 3u;
   uint8_t tile_id = get_bkg_tile_xy(x_tile, y_tile);
-  if (tile_id <= 1 || (tile_id >= 6 && tile_id <= 0x0C)) {
+  if (tile_id == 2 || tile_id == 3 || (tile_id >= 6 && tile_id <= 0x0C)) {
     // Collide
     if (direction_pressed & DIR_UP) {
       player_y++;

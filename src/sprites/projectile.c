@@ -55,7 +55,7 @@ void update_projectile(projectile* projectile, uint8_t oam) {
 void check_projectile_collision(projectile* projectile) {
   // Collide with BG
   uint8_t tile_id = get_bkg_tile_xy(projectile->x >> 3, projectile->y >> 3);
-  if (tile_id <= 1 || (tile_id >= 6 && tile_id <= 0x0C)) {
+  if (tile_id == 2 || tile_id == 3 || (tile_id >= 6 && tile_id <= 0x0C)) {
     destroy_sprite(projectile);
     return;
   }
