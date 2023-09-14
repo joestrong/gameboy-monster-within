@@ -121,6 +121,9 @@ const BYTE debug_tiles[16] = {
 };
 
 enemy* enemy1;
+enemy* enemy2;
+enemy* enemy3;
+enemy* enemy4;
 
 void main() {
   DISPLAY_OFF;
@@ -240,17 +243,17 @@ void loadGame() {
   enemy1 = create_enemy(32, 16);
   add_sprite(SPRITE_TYPE_ENEMY, enemy1);
 
-  enemy* enemy2 = create_enemy(64, 16);
+  enemy2 = create_enemy(64, 16);
   add_sprite(SPRITE_TYPE_ENEMY, enemy2);
 
-  enemy* enemy3 = create_enemy(296, 144);
+  enemy3 = create_enemy(296, 144);
   enemy3->patrol_target_1 = 2;
   enemy3->patrol_target_2 = 3;
   enemy3->current_target = 3;
   enemy3->target = 3;
   add_sprite(SPRITE_TYPE_ENEMY, enemy3);
 
-  enemy* enemy4 = create_enemy(240, 160);
+  enemy4 = create_enemy(240, 160);
   enemy4->patrol_target_1 = 4;
   enemy4->patrol_target_2 = 5;
   enemy4->current_target = 5;
@@ -491,6 +494,9 @@ void process_events() {
     case EVENT_PRISON_CELL:
       // TODO: Press B to punch
       enemy1->state = ENEMY_STATE_ATTACKING;
+      enemy2->state = ENEMY_STATE_ATTACKING;
+      enemy3->state = ENEMY_STATE_ATTACKING;
+      enemy4->state = ENEMY_STATE_ATTACKING;
       if (counter > 600) {
         counter = 500;
       }
